@@ -44,7 +44,7 @@ const ReferralPage = () => {
             }
 
             // Генерация реферальной ссылки
-            const link = `https://t.me/your_bot_username?start=${chatId}`; // Ссылка для Telegram-бота
+            const link = `https://t.me/whoisd0t_bot?start=${chatId}`; // Ссылка для Telegram-бота
             setReferralLink(link);
             setError('');
         } catch (err) {
