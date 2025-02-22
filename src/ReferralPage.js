@@ -20,6 +20,8 @@ const ReferralPage = () => {
 
             if (tgChatId) {
                 setChatId(tgChatId); // Устанавливаем chatId в состояние
+                generateReferralLink(tgChatId); // Генерация реферальной ссылки
+                fetchReferralData(tgChatId); // Получение данных о рефералах
             } else {
                 setError('Chat ID not found. Please open this page via Telegram bot.');
             }
@@ -29,7 +31,7 @@ const ReferralPage = () => {
     }, []);
 
     // Генерация реферальной ссылки
-    const generateReferralLink = async () => {
+    const generateReferralLink = async (chatId) => {
         if (!chatId) {
             setError('Chat ID is required to generate a referral link.');
             return;
@@ -56,6 +58,19 @@ const ReferralPage = () => {
         } catch (err) {
             console.error('Error generating referral link:', err);
             setError('Failed to generate referral link. Please try again.');
+        }
+    };
+
+    // Получение данных о рефералах
+    const fetchReferralData = async (chatId) => {
+        if (!chatId) return;
+
+        const referralRef = ref(database, `referrals/${chatId}`);
+        const snapshot = await get(referralRef);
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            setReferralCount(data.referralCount || 0);
+            setReferralsList(data.referrals || []);
         }
     };
 
@@ -104,20 +119,6 @@ const ReferralPage = () => {
         }
     }, [location, chatId]);
 
-    // Получение текущего количества рефералов и списка рефералов
-    useEffect(() => {
-        if (chatId) {
-            const referralRef = ref(database, `referrals/${chatId}`);
-            get(referralRef).then((snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    setReferralCount(data.referralCount || 0);
-                    setReferralsList(data.referrals || []); // Обновляем список рефералов
-                }
-            });
-        }
-    }, [chatId]);
-
     // Копирование ссылки в буфер обмена
     const copyToClipboard = () => {
         if (referralLink) {
@@ -141,7 +142,7 @@ const ReferralPage = () => {
             {/* Кнопка для генерации реферальной ссылки */}
             <div style={{ marginTop: '20px' }}>
                 <button
-                    onClick={generateReferralLink}
+                    onClick={() => generateReferralLink(chatId)}
                     style={{
                         padding: '10px 20px',
                         fontSize: '16px',

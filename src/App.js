@@ -23,6 +23,7 @@ function WalletConnection() {
   const wallet = useTonWallet();
   const [walletAddress, setWalletAddress] = useState('');
   const [error, setError] = useState('');
+  const [username, setUsername] = useState(''); // Состояние для хранения никнейма пользователя
 
   useEffect(() => {
     if (wallet) {
@@ -32,6 +33,16 @@ function WalletConnection() {
       setWalletAddress('');
     }
   }, [wallet]);
+
+  // Получаем данные пользователя из Telegram Mini App
+  useEffect(() => {
+    if (window.Telegram && window.Telegram.WebApp) {
+      const user = window.Telegram.WebApp.initDataUnsafe.user;
+      if (user && user.username) {
+        setUsername(user.username);
+      }
+    }
+  }, []);
 
   const handleSendTon = async () => {
     if (!wallet) {
@@ -115,6 +126,7 @@ function WalletConnection() {
         color: '#ffffff', // Белый текст для контраста
       }}>
         <h1>DOT COIN</h1>
+        {username && <p>Hello, {username}</p>} {/* Отображаем никнейм пользователя */}
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {wallet && (
           <div style={{ marginTop: '20px' }}>
