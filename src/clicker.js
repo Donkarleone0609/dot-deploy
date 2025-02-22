@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom'; // Импортируем Link для навигации
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { getDatabase, ref, set, get } from 'firebase/database'; // Импортируем функции для Realtime Database
 import WebApp from '@twa-dev/sdk'; // Импортируем SDK для Telegram Web Apps
 
 // Конфигурация Firebase
@@ -17,7 +17,7 @@ const firebaseConfig = {
 
 // Инициализация Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const database = getDatabase(app); // Получаем ссылку на Realtime Database
 
 const Clicker = () => {
     const [clickCount, setClickCount] = useState(0); // Счётчик кликов
@@ -33,19 +33,19 @@ const Clicker = () => {
         }
     }, []);
 
-    // Загрузка данных пользователя из Firestore
+    // Загрузка данных пользователя из Realtime Database
     const loadUserData = async (userId) => {
-        const userDocRef = doc(db, 'users', userId);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-            setClickCount(userDoc.data().clickCount); // Устанавливаем сохранённое количество кликов
+        const userRef = ref(database, `users/${userId}`); // Ссылка на данные пользователя
+        const snapshot = await get(userRef); // Получаем данные
+        if (snapshot.exists()) {
+            setClickCount(snapshot.val().clickCount); // Устанавливаем сохранённое количество кликов
         }
     };
 
-    // Сохранение данных пользователя в Firestore
+    // Сохранение данных пользователя в Realtime Database
     const saveUserData = async (userId, clickCount) => {
-        const userDocRef = doc(db, 'users', userId);
-        await setDoc(userDocRef, { clickCount }, { merge: true });
+        const userRef = ref(database, `users/${userId}`); // Ссылка на данные пользователя
+        await set(userRef, { clickCount }); // Сохраняем данные
     };
 
     // Обработчик клика
@@ -54,7 +54,7 @@ const Clicker = () => {
         const newClickCount = clickCount + 1;
         setClickCount(newClickCount); // Увеличиваем счётчик
 
-        // Сохраняем данные в Firebase
+        // Сохраняем данные в Realtime Database
         if (userId) {
             await saveUserData(userId, newClickCount);
         }
