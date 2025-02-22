@@ -113,26 +113,36 @@ function WalletConnection() {
       backgroundColor: '#404040', // Фон всей страницы
       minHeight: '100vh', // Минимальная высота страницы
       padding: '20px', // Отступы для контента
-      position: 'relative', // Для позиционирования кнопки
+      display: 'flex', // Используем flexbox для центрирования
+      flexDirection: 'column', // Вертикальное расположение элементов
+      alignItems: 'center', // Центрирование по горизонтали
+      justifyContent: 'flex-start', // Контент начинается сверху
+      paddingTop: '50px', // Отступ сверху для поднятия контента выше
     }}>
-      {/* Кнопка подключения кошелька в верхнем правом углу */}
-      <div style={{
-        position: 'absolute',
-        top: '20px',
-        right: '20px',
-      }}>
-        <TonConnectButton />
-      </div>
-
       {/* Основной контент */}
       <div style={{ 
         textAlign: 'center', 
-        marginTop: '50px', 
         color: '#ffffff', // Белый текст для контраста
+        width: '100%', // Занимает всю ширину
       }}>
         <h1>DOT COIN</h1>
         {firstName && <p>Hello, {firstName}!</p>} {/* Отображаем имя пользователя */}
         {username && <p>Your username: @{username}</p>} {/* Отображаем никнейм пользователя */}
+
+        {/* Текст над кнопкой подключения кошелька */}
+        <p style={{ marginBottom: '10px', fontSize: '16px' }}>
+          Connect your wallet to receive airdrop in the future
+        </p>
+
+        {/* Контейнер для центрирования кнопки */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', // Центрирование по горизонтали
+          width: '100%', // Занимает всю ширину
+        }}>
+          <TonConnectButton />
+        </div>
+
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {wallet && (
           <div style={{ marginTop: '20px' }}>
@@ -188,7 +198,7 @@ function WalletConnection() {
           borderRadius: '5px',
         }}>
           Home
-          </Link>
+        </Link>
         <Link to="/click-counter" style={{
           textDecoration: 'none',
           color: '#000000',
