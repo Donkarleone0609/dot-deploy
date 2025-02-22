@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ReferralPage from './ReferralPage';
 import ClickCounter from './clicker'; // Импортируем компонент ClickCounter
 import WebApp from '@twa-dev/sdk'; // Импортируем SDK для Telegram Web Apps
+import { motion, AnimatePresence } from 'framer-motion'; // Импортируем Framer Motion
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function WalletConnection() {
   const [username, setUsername] = useState(''); // Состояние для хранения никнейма пользователя
   const [firstName, setFirstName] = useState(''); // Состояние для хранения имени пользователя
   const [isMobile, setIsMobile] = useState(true); // Состояние для проверки устройства
+  const [isLoading, setIsLoading] = useState(true); // Состояние загрузки
 
   // Проверяем, является ли устройство мобильным
   useEffect(() => {
@@ -44,6 +46,15 @@ function WalletConnection() {
         setFirstName(user.first_name); // Устанавливаем имя пользователя
       }
     }
+  }, []);
+
+  // Имитация загрузки приложения
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false); // Завершаем загрузку через 3 секунды
+    }, 3000);
+
+    return () => clearTimeout(timer); // Очистка таймера при размонтировании
   }, []);
 
   // Глобальный обработчик ошибок
@@ -101,75 +112,114 @@ function WalletConnection() {
       justifyContent: 'flex-start', // Контент начинается сверху
       paddingTop: '50px', // Отступ сверху для поднятия контента выше
     }}>
+      {/* Анимация загрузки */}
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: '#404040',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+            }}
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div
+              style={{
+                width: '100px',
+                height: '100px',
+                borderRadius: '50%',
+                border: '5px solid #4CAF50',
+                borderTop: '5px solid transparent',
+              }}
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Основной контент */}
-      <div style={{ 
-        textAlign: 'center', 
-        color: '#ffffff', // Белый текст для контраста
-        width: '100%', // Занимает всю ширину
-      }}>
-        <h1>DOT COIN</h1>
-        {firstName && <p>Hello, {firstName}!</p>} {/* Отображаем имя пользователя */}
-        {username && <p>Your username: @{username}</p>} {/* Отображаем никнейм пользователя */}
-
-        {/* Текст над кнопкой подключения кошелька */}
-        <p style={{ marginBottom: '10px', fontSize: '16px' }}>
-          Connect your wallet to receive airdrop in the future
-        </p>
-
-        {/* Контейнер для центрирования кнопки */}
+      {!isLoading && (
         <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', // Центрирование по горизонтали
+          textAlign: 'center', 
+          color: '#ffffff', // Белый текст для контраста
           width: '100%', // Занимает всю ширину
         }}>
-          <TonConnectButton />
+          <h1>DOT COIN</h1>
+          {firstName && <p>Hello, {firstName}!</p>} {/* Отображаем имя пользователя */}
+          {username && <p>Your username: @{username}</p>} {/* Отображаем никнейм пользователя */}
+
+          {/* Текст над кнопкой подключения кошелька */}
+          <p style={{ marginBottom: '10px', fontSize: '16px' }}>
+            Connect your wallet to receive airdrop in the future
+          </p>
+
+          {/* Контейнер для центрирования кнопки */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', // Центрирование по горизонтали
+            width: '100%', // Занимает всю ширину
+          }}>
+            <TonConnectButton />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Нижняя панель с кнопками навигации */}
-      <div style={{
-        position: 'fixed',
-        bottom: '0',
-        left: '0',
-        right: '0',
-        backgroundColor: '#333',
-        padding: '10px',
-        textAlign: 'center',
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '20px', // Расстояние между кнопками
-      }}>
-        <Link to="/referral" style={{
-          textDecoration: 'none',
-          color: '#000000',
-          fontSize: '16px',
-          padding: '10px 20px',
-          backgroundColor: '#ffff',
-          borderRadius: '5px',
+      {!isLoading && (
+        <div style={{
+          position: 'fixed',
+          bottom: '0',
+          left: '0',
+          right: '0',
+          backgroundColor: '#333',
+          padding: '10px',
+          textAlign: 'center',
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '20px', // Расстояние между кнопками
         }}>
-          Referral
-        </Link>
-        <Link to="/" style={{
-          textDecoration: 'none',
-          color: '#000000',
-          fontSize: '16px',
-          padding: '10px 20px',
-          backgroundColor: '#ffff',
-          borderRadius: '5px',
-        }}>
-          Home
-        </Link>
-        <Link to="/click-counter" style={{
-          textDecoration: 'none',
-          color: '#000000',
-          fontSize: '16px',
-          padding: '10px 20px',
-          backgroundColor: '#ffff',
-          borderRadius: '5px',
-        }}>
-          Перейти к Click Counter
-        </Link>
-      </div>
+          <Link to="/referral" style={{
+            textDecoration: 'none',
+            color: '#000000',
+            fontSize: '16px',
+            padding: '10px 20px',
+            backgroundColor: '#ffff',
+            borderRadius: '5px',
+          }}>
+            Referral
+          </Link>
+          <Link to="/" style={{
+            textDecoration: 'none',
+            color: '#000000',
+            fontSize: '16px',
+            padding: '10px 20px',
+            backgroundColor: '#ffff',
+            borderRadius: '5px',
+          }}>
+            Home
+          </Link>
+          <Link to="/click-counter" style={{
+            textDecoration: 'none',
+            color: '#000000',
+            fontSize: '16px',
+            padding: '10px 20px',
+            backgroundColor: '#ffff',
+            borderRadius: '5px',
+          }}>
+            Перейти к Click Counter
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

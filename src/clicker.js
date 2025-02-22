@@ -64,9 +64,13 @@ const Clicker = () => {
                 const timeDiff = currentTime - data.lastSeen; // Разница во времени
                 const coinsEarned = Math.floor(timeDiff / 5000); // 1 монета каждые 5 секунд
                 if (coinsEarned > 0) {
-                    setClickCount((prev) => prev + coinsEarned); // Добавляем монеты
+                    const newClickCount = (data.clickCount || 0) + coinsEarned;
+                    setClickCount(newClickCount); // Добавляем монеты
                     setProfitPopup(coinsEarned); // Показываем поп-ап с прибылью
                     setTimeout(() => setProfitPopup(null), 5000); // Закрываем поп-ап через 5 секунд
+
+                    // Сохраняем обновлённое количество монет в базу данных
+                    await saveUserData(userId, { clickCount: newClickCount, hasAutoFarm: data.hasAutoFarm });
                 }
             }
         }
@@ -112,13 +116,19 @@ const Clicker = () => {
     // Автофармилка: добавляем 1 монету каждые 5 секунд
     useEffect(() => {
         if (hasAutoFarm && isAppVisible) {
-            const interval = setInterval(() => {
-                setClickCount((prev) => prev + 1);
+            const interval = setInterval(async () => {
+                const newClickCount = clickCount + 1;
+                setClickCount(newClickCount); // Увеличиваем счётчик
+
+                // Сохраняем данные в Realtime Database
+                if (userId) {
+                    await saveUserData(userId, { clickCount: newClickCount, hasAutoFarm });
+                }
             }, 5000); // 5 секунд
 
             return () => clearInterval(interval); // Очистка интервала при размонтировании
         }
-    }, [hasAutoFarm, isAppVisible]);
+    }, [hasAutoFarm, isAppVisible, clickCount, userId]);
 
     // Сохранение времени последнего выхода при закрытии приложения
     useEffect(() => {
