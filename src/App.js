@@ -22,19 +22,16 @@ function App() {
 function WalletConnection() {
   const [tonConnectUI] = useTonConnectUI();
   const wallet = useTonWallet();
-  const [walletAddress, setWalletAddress] = useState('');
-  const [error, setError] = useState('');
   const [username, setUsername] = useState(''); // Состояние для хранения никнейма пользователя
   const [firstName, setFirstName] = useState(''); // Состояние для хранения имени пользователя
+  const [isMobile, setIsMobile] = useState(true); // Состояние для проверки устройства
 
+  // Проверяем, является ли устройство мобильным
   useEffect(() => {
-    if (wallet) {
-      setWalletAddress(wallet.account.address);
-      setError(''); // Очищаем ошибку при успешном подключении
-    } else {
-      setWalletAddress('');
-    }
-  }, [wallet]);
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    setIsMobile(isMobileDevice);
+  }, []);
 
   // Получаем данные пользователя из Telegram Mini App
   useEffect(() => {
@@ -49,41 +46,6 @@ function WalletConnection() {
     }
   }, []);
 
-  const handleSendTon = async () => {
-    if (!wallet) {
-      setError('Wallet is not connected');
-      return;
-    }
-
-    try {
-      // Адрес кошелька получателя (подключенный пользователь)
-      const recipientAddress = wallet.account.address;
-
-      // Количество TON для отправки (0.001 TON = 1000000 наноТонов)
-      const amount = '1000000'; // 0.001 TON
-
-      // Создаем транзакцию для отправки TON
-      const transaction = {
-        messages: [
-          {
-            address: recipientAddress, // Адрес получателя
-            amount: amount, // Количество TON в наноТонах
-          },
-        ],
-        validUntil: Math.floor(Date.now() / 1000) + 600, // Транзакция действительна 10 минут
-      };
-
-      // Отправляем транзакцию
-      const result = await tonConnectUI.sendTransaction(transaction);
-
-      console.log('Transaction sent:', result);
-      setError(''); // Очищаем ошибку при успешной транзакции
-    } catch (err) {
-      console.error('Transaction error:', err);
-      setError('Failed to send TON. Please try again.');
-    }
-  };
-
   // Глобальный обработчик ошибок
   useEffect(() => {
     const handleError = (event) => {
@@ -93,7 +55,6 @@ function WalletConnection() {
         console.log('Operation aborted (likely due to tab switch or browser minimization)');
       } else if (error) {
         console.error('Unhandled error:', error);
-        setError('An error occurred. Please try again.');
       }
     };
 
@@ -107,6 +68,27 @@ function WalletConnection() {
       window.removeEventListener('unhandledrejection', handleError);
     };
   }, []);
+
+  // Если пользователь заходит с ПК, показываем сообщение
+  if (!isMobile) {
+    return (
+      <div style={{ 
+        backgroundColor: '#404040', // Фон всей страницы
+        minHeight: '100vh', // Минимальная высота страницы
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        color: '#ffffff', // Белый текст для контраста
+        textAlign: 'center',
+        padding: '20px',
+      }}>
+        <h1>DOT COIN</h1>
+        <p>Пожалуйста, откройте это приложение на вашем телефоне.</p>
+        <p>Это приложение доступно только для мобильных устройств.</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ 
@@ -142,28 +124,6 @@ function WalletConnection() {
         }}>
           <TonConnectButton />
         </div>
-
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        {wallet && (
-          <div style={{ marginTop: '20px' }}>
-            <p>Connected Wallet: {walletAddress}</p>
-            <button 
-              onClick={handleSendTon}
-              style={{
-                marginTop: '20px',
-                padding: '10px 20px',
-                fontSize: '16px',
-                cursor: 'pointer',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-              }}
-            >
-              Получить 0.001 TON
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Нижняя панель с кнопками навигации */}

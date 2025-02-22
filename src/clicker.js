@@ -23,6 +23,9 @@ const Clicker = () => {
     const [clickCount, setClickCount] = useState(0); // Счётчик кликов
     const [isClicked, setIsClicked] = useState(false); // Состояние анимации
     const [userId, setUserId] = useState(null); // ID пользователя Telegram
+    const [hasAutoFarm, setHasAutoFarm] = useState(false); // Наличие автофармилки
+    const [lastSeen, setLastSeen] = useState(null); // Время последнего выхода
+    const [profitPopup, setProfitPopup] = useState(null); // Поп-ап с прибылью
 
     // Получаем ID пользователя из Telegram Mini App
     useEffect(() => {
@@ -38,14 +41,28 @@ const Clicker = () => {
         const userRef = ref(database, `users/${userId}`); // Ссылка на данные пользователя
         const snapshot = await get(userRef); // Получаем данные
         if (snapshot.exists()) {
-            setClickCount(snapshot.val().clickCount); // Устанавливаем сохранённое количество кликов
+            const data = snapshot.val();
+            setClickCount(data.clickCount || 0); // Устанавливаем сохранённое количество кликов
+            setHasAutoFarm(data.hasAutoFarm || false); // Устанавливаем наличие автофармилки
+            setLastSeen(data.lastSeen || Date.now()); // Устанавливаем время последнего выхода
+
+            // Рассчитываем прибыль за время отсутствия
+            if (data.hasAutoFarm && data.lastSeen) {
+                const currentTime = Date.now();
+                const timeDiff = currentTime - data.lastSeen; // Разница во времени
+                const coinsEarned = Math.floor(timeDiff / 5000); // 1 монета каждые 5 секунд
+                if (coinsEarned > 0) {
+                    setClickCount((prev) => prev + coinsEarned); // Добавляем монеты
+                    setProfitPopup(coinsEarned); // Показываем поп-ап с прибылью
+                }
+            }
         }
     };
 
     // Сохранение данных пользователя в Realtime Database
-    const saveUserData = async (userId, clickCount) => {
+    const saveUserData = async (userId, data) => {
         const userRef = ref(database, `users/${userId}`); // Ссылка на данные пользователя
-        await set(userRef, { clickCount }); // Сохраняем данные
+        await set(userRef, { ...data, lastSeen: Date.now() }); // Сохраняем данные и время последнего выхода
     };
 
     // Обработчик клика
@@ -56,7 +73,7 @@ const Clicker = () => {
 
         // Сохраняем данные в Realtime Database
         if (userId) {
-            await saveUserData(userId, newClickCount);
+            await saveUserData(userId, { clickCount: newClickCount, hasAutoFarm });
         }
 
         // Сбрасываем анимацию через 200 мс
@@ -64,6 +81,43 @@ const Clicker = () => {
             setIsClicked(false);
         }, 200);
     };
+
+    // Покупка автофармилки
+    const buyAutoFarm = async () => {
+        if (clickCount >= 1000 && !hasAutoFarm) {
+            const newClickCount = clickCount - 1000;
+            setClickCount(newClickCount);
+            setHasAutoFarm(true);
+
+            // Сохраняем данные в Realtime Database
+            if (userId) {
+                await saveUserData(userId, { clickCount: newClickCount, hasAutoFarm: true });
+            }
+        }
+    };
+
+    // Автофармилка: добавляем 1 монету каждые 5 секунд
+    useEffect(() => {
+        if (hasAutoFarm) {
+            const interval = setInterval(() => {
+                setClickCount((prev) => prev + 1);
+            }, 5000); // 5 секунд
+
+            return () => clearInterval(interval); // Очистка интервала при размонтировании
+        }
+    }, [hasAutoFarm]);
+
+    // Сохранение времени последнего выхода при закрытии приложения
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            if (userId) {
+                saveUserData(userId, { clickCount, hasAutoFarm });
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [userId, clickCount, hasAutoFarm]);
 
     return (
         <div style={{ 
@@ -98,6 +152,44 @@ const Clicker = () => {
                 }}
                 onClick={handleClick}
             />
+
+            {/* Кнопка покупки автофармилки */}
+            {!hasAutoFarm && (
+                <button
+                    onClick={buyAutoFarm}
+                    style={{
+                        marginTop: '20px',
+                        padding: '10px 20px',
+                        fontSize: '16px',
+                        cursor: 'pointer',
+                        backgroundColor: '#4CAF50',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '5px',
+                    }}
+                    disabled={clickCount < 1000}
+                >
+                    Купить автофармилку (1000 монет)
+                </button>
+            )}
+
+            {/* Поп-ап с прибылью */}
+            {profitPopup !== null && (
+                <div style={{
+                    position: 'fixed',
+                    top: '20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    padding: '10px 20px',
+                    borderRadius: '5px',
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                    zIndex: 1000,
+                }}>
+                    Вы получили {profitPopup} монет за время отсутствия!
+                </div>
+            )}
 
             {/* Нижняя панель с кнопкой навигации */}
             <div style={{
