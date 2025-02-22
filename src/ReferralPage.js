@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { database } from './firebase'; // Импортируем Firebase
 import { ref, set, get, update } from 'firebase/database'; // Импортируем методы Firebase
 import { useLocation, Link } from 'react-router-dom'; // Импортируем useLocation и Link для навигации
+import WebApp from '@twa-dev/sdk'; // Импортируем SDK для Telegram Web Apps
 
 const ReferralPage = () => {
     const [chatId, setChatId] = useState(''); // ID текущего пользователя (chatId из Telegram)
@@ -13,25 +14,16 @@ const ReferralPage = () => {
 
     // Получение chatId из Telegram Web App
     useEffect(() => {
-        if (window.Telegram && window.Telegram.WebApp) {
-            const initData = window.Telegram.WebApp.initData; // Данные от Telegram
-            const params = new URLSearchParams(initData);
-            const tgChatId = params.get('user') ? JSON.parse(params.get('user')).id : null; // Получаем chatId
-
-            if (tgChatId) {
-                setChatId(tgChatId); // Устанавливаем chatId в состояние
-                generateReferralLink(tgChatId); // Генерация реферальной ссылки
-                fetchReferralData(tgChatId); // Получение данных о рефералах
-            } else {
-                setError('Chat ID not found. Please open this page via Telegram bot.');
-            }
+        if (WebApp.initDataUnsafe.user) {
+            const tgChatId = WebApp.initDataUnsafe.user.id; // Получаем chatId из SDK
+            setChatId(tgChatId); // Устанавливаем chatId в состояние
         } else {
-            setError('This page is designed to work only inside Telegram.');
+            setError('Chat ID not found. Please open this page via Telegram bot.');
         }
     }, []);
 
     // Генерация реферальной ссылки
-    const generateReferralLink = async (chatId) => {
+    const generateReferralLink = async () => {
         if (!chatId) {
             setError('Chat ID is required to generate a referral link.');
             return;
@@ -58,19 +50,6 @@ const ReferralPage = () => {
         } catch (err) {
             console.error('Error generating referral link:', err);
             setError('Failed to generate referral link. Please try again.');
-        }
-    };
-
-    // Получение данных о рефералах
-    const fetchReferralData = async (chatId) => {
-        if (!chatId) return;
-
-        const referralRef = ref(database, `referrals/${chatId}`);
-        const snapshot = await get(referralRef);
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            setReferralCount(data.referralCount || 0);
-            setReferralsList(data.referrals || []);
         }
     };
 
@@ -119,6 +98,20 @@ const ReferralPage = () => {
         }
     }, [location, chatId]);
 
+    // Получение текущего количества рефералов и списка рефералов
+    useEffect(() => {
+        if (chatId) {
+            const referralRef = ref(database, `referrals/${chatId}`);
+            get(referralRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    setReferralCount(data.referralCount || 0);
+                    setReferralsList(data.referrals || []); // Обновляем список рефералов
+                }
+            });
+        }
+    }, [chatId]);
+
     // Копирование ссылки в буфер обмена
     const copyToClipboard = () => {
         if (referralLink) {
@@ -142,7 +135,7 @@ const ReferralPage = () => {
             {/* Кнопка для генерации реферальной ссылки */}
             <div style={{ marginTop: '20px' }}>
                 <button
-                    onClick={() => generateReferralLink(chatId)}
+                    onClick={generateReferralLink}
                     style={{
                         padding: '10px 20px',
                         fontSize: '16px',

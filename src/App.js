@@ -3,6 +3,7 @@ import { TonConnectUIProvider, useTonConnectUI, useTonWallet, TonConnectButton }
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ReferralPage from './ReferralPage';
 import ClickCounter from './clicker'; // Импортируем компонент ClickCounter
+import WebApp from '@twa-dev/sdk'; // Импортируем SDK для Telegram Web Apps
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function WalletConnection() {
   const [walletAddress, setWalletAddress] = useState('');
   const [error, setError] = useState('');
   const [username, setUsername] = useState(''); // Состояние для хранения никнейма пользователя
+  const [firstName, setFirstName] = useState(''); // Состояние для хранения имени пользователя
 
   useEffect(() => {
     if (wallet) {
@@ -36,10 +38,13 @@ function WalletConnection() {
 
   // Получаем данные пользователя из Telegram Mini App
   useEffect(() => {
-    if (window.Telegram && window.Telegram.WebApp) {
-      const user = window.Telegram.WebApp.initDataUnsafe.user;
-      if (user && user.username) {
-        setUsername(user.username);
+    if (WebApp.initDataUnsafe.user) {
+      const user = WebApp.initDataUnsafe.user;
+      if (user.username) {
+        setUsername(user.username); // Устанавливаем никнейм пользователя
+      }
+      if (user.first_name) {
+        setFirstName(user.first_name); // Устанавливаем имя пользователя
       }
     }
   }, []);
@@ -126,7 +131,8 @@ function WalletConnection() {
         color: '#ffffff', // Белый текст для контраста
       }}>
         <h1>DOT COIN</h1>
-        {username && <p>Hello, {username}</p>} {/* Отображаем никнейм пользователя */}
+        {firstName && <p>Hello, {firstName}!</p>} {/* Отображаем имя пользователя */}
+        {username && <p>Your username: @{username}</p>} {/* Отображаем никнейм пользователя */}
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {wallet && (
           <div style={{ marginTop: '20px' }}>
@@ -171,7 +177,7 @@ function WalletConnection() {
           backgroundColor: '#ffff',
           borderRadius: '5px',
         }}>
-          Перейти к реферальной системе
+          Referral
         </Link>
         <Link to="/" style={{
           textDecoration: 'none',
