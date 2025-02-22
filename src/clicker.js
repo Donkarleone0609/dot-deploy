@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'; // Импортируем Link для �
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, get } from 'firebase/database'; // Импортируем функции для Realtime Database
 import WebApp from '@twa-dev/sdk'; // Импортируем SDK для Telegram Web Apps
+import './Clicker.css'; // Импортируем CSS для анимации
 
 // Конфигурация Firebase
 const firebaseConfig = {
@@ -26,6 +27,7 @@ const Clicker = () => {
     const [hasAutoFarm, setHasAutoFarm] = useState(false); // Наличие автофармилки
     const [lastSeen, setLastSeen] = useState(null); // Время последнего выхода
     const [profitPopup, setProfitPopup] = useState(null); // Поп-ап с прибылью
+    const [isAppVisible, setIsAppVisible] = useState(true); // Видимость мини-приложения
 
     // Получаем ID пользователя из Telegram Mini App
     useEffect(() => {
@@ -34,6 +36,16 @@ const Clicker = () => {
             setUserId(user.id.toString()); // Сохраняем ID пользователя
             loadUserData(user.id.toString()); // Загружаем данные пользователя
         }
+    }, []);
+
+    // Отслеживаем видимость мини-приложения
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            setIsAppVisible(!document.hidden);
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
     }, []);
 
     // Загрузка данных пользователя из Realtime Database
@@ -54,6 +66,7 @@ const Clicker = () => {
                 if (coinsEarned > 0) {
                     setClickCount((prev) => prev + coinsEarned); // Добавляем монеты
                     setProfitPopup(coinsEarned); // Показываем поп-ап с прибылью
+                    setTimeout(() => setProfitPopup(null), 5000); // Закрываем поп-ап через 5 секунд
                 }
             }
         }
@@ -98,14 +111,14 @@ const Clicker = () => {
 
     // Автофармилка: добавляем 1 монету каждые 5 секунд
     useEffect(() => {
-        if (hasAutoFarm) {
+        if (hasAutoFarm && isAppVisible) {
             const interval = setInterval(() => {
                 setClickCount((prev) => prev + 1);
             }, 5000); // 5 секунд
 
             return () => clearInterval(interval); // Очистка интервала при размонтировании
         }
-    }, [hasAutoFarm]);
+    }, [hasAutoFarm, isAppVisible]);
 
     // Сохранение времени последнего выхода при закрытии приложения
     useEffect(() => {
@@ -175,18 +188,7 @@ const Clicker = () => {
 
             {/* Поп-ап с прибылью */}
             {profitPopup !== null && (
-                <div style={{
-                    position: 'fixed',
-                    top: '20px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    backgroundColor: '#4CAF50',
-                    color: 'white',
-                    padding: '10px 20px',
-                    borderRadius: '5px',
-                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-                    zIndex: 1000,
-                }}>
+                <div className="profit-popup">
                     Вы получили {profitPopup} монет за время отсутствия!
                 </div>
             )}
