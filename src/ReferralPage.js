@@ -11,18 +11,22 @@ const ReferralPage = () => {
     const [error, setError] = useState(''); // Ошибки
     const location = useLocation(); // Для получения query-параметров
 
-    // Получение chatId из Telegram
+    // Получение chatId из Telegram Web App
     useEffect(() => {
-        // В Telegram-боте chatId можно получить из параметров URL или через Telegram Web App API
-        const queryParams = new URLSearchParams(location.search);
-        const tgChatId = queryParams.get('chatId'); // Получаем chatId из URL
+        if (window.Telegram && window.Telegram.WebApp) {
+            const initData = window.Telegram.WebApp.initData; // Данные от Telegram
+            const params = new URLSearchParams(initData);
+            const tgChatId = params.get('user') ? JSON.parse(params.get('user')).id : null; // Получаем chatId
 
-        if (tgChatId) {
-            setChatId(tgChatId); // Устанавливаем chatId в состояние
+            if (tgChatId) {
+                setChatId(tgChatId); // Устанавливаем chatId в состояние
+            } else {
+                setError('Chat ID not found. Please open this page via Telegram bot.');
+            }
         } else {
-            setError('Chat ID not found. Please open this page via Telegram bot.');
+            setError('This page is designed to work only inside Telegram.');
         }
-    }, [location]);
+    }, []);
 
     // Генерация реферальной ссылки
     const generateReferralLink = async () => {
