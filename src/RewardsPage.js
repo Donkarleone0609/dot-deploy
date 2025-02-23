@@ -6,8 +6,8 @@ import NavigationBar from './NavigationBar'; // Импортируем нави�
 
 // Функция для проверки подписки на Telegram канал
 const checkTelegramSubscription = async (userId) => {
-  const botToken = 'ВАШ_ТОКЕН_БОТА'; // Замените на токен вашего бота
-  const channelId = '@ВАШ_КАНАЛ'; // Замените на username вашего канала, например, @my_channel
+  const botToken = '7118279667:AAF0EHBOL4lK85mD7KCR8ZeJFX6-xVL2Flc'; // Замените на токен вашего бота
+  const channelId = '@whoisdotcoin'; // Замените на username вашего канала, например, @my_channel
   const url = `https://api.telegram.org/bot${botToken}/getChatMember?chat_id=${channelId}&user_id=${userId}`;
 
   try {
@@ -58,32 +58,36 @@ function RewardsPage() {
     fetchCoins();
   }, [userId]);
 
-  // Проверяем, подписан ли пользователь на Telegram канал
-  useEffect(() => {
-    const checkSubscription = async () => {
-      if (userId) {
-        const isSubscribed = await checkTelegramSubscription(userId);
-        setTelegramSubscribed(isSubscribed);
-      }
-    };
-
-    checkSubscription();
-  }, [userId]);
-
-  // Проверяем, подключен ли кошелек
-  useEffect(() => {
-    if (wallet) {
-      setWalletConnected(true);
-    } else {
-      setWalletConnected(false);
-    }
-  }, [wallet]);
-
   // Функция для получения награды за подписку на Telegram канал
-  const claimTelegramReward = () => {
-    if (telegramSubscribed) {
-      setCoins(coins + 2000);
-      alert('Вы получили 2000 монет за подписку на Telegram канал!');
+  const claimTelegramReward = async () => {
+    if (!userId) {
+      alert('ID пользователя Telegram не найден.');
+      return;
+    }
+
+    const isSubscribed = await checkTelegramSubscription(userId);
+    if (isSubscribed) {
+      const rewardRef = ref(database, `users/${userId}/telegramRewardClaimed`);
+      const snapshot = await get(rewardRef);
+
+      if (snapshot.exists() && snapshot.val() === true) {
+        alert('Вы уже получили награду за подписку на Telegram канал.');
+        return;
+      }
+
+      const coinsRef = ref(database, `users/${userId}/clickCount`);
+      const currentCoins = (await get(coinsRef)).val() || 0;
+      const newCoins = currentCoins + 2000;
+
+      try {
+        await set(coinsRef, newCoins); // Обновляем монеты в Firebase
+        await set(rewardRef, true); // Сохраняем флаг выполнения задания
+        setCoins(newCoins); // Обновляем состояние в React
+        alert('Вы получили 2000 монет за подписку на Telegram канал!');
+      } catch (error) {
+        console.error('Ошибка при обновлении данных:', error);
+        alert('Произошла ошибка при начислении награды.');
+      }
     } else {
       alert('Вы еще не подписались на Telegram канал.');
     }
@@ -91,8 +95,13 @@ function RewardsPage() {
 
   // Функция для получения награды за привязку кошелька
   const claimWalletReward = async () => {
-    if (!walletConnected) {
+    if (!wallet) {
       alert('Вы еще не привязали TON кошелек.');
+      return;
+    }
+
+    if (!userId) {
+      alert('ID пользователя Telegram не найден.');
       return;
     }
 
@@ -136,15 +145,15 @@ function RewardsPage() {
         <div className="reward-item">
           <h3>Подписка на Telegram канал</h3>
           <p>Награда: 2000 монет</p>
-          <button onClick={claimTelegramReward} disabled={telegramSubscribed}>
-            {telegramSubscribed ? 'Награда получена' : 'Получить награду'}
+          <button onClick={claimTelegramReward}>
+            Получить награду
           </button>
         </div>
         <div className="reward-item">
           <h3>Привязка TON кошелька</h3>
           <p>Награда: 5000 монет</p>
-          <button onClick={claimWalletReward} disabled={walletConnected}>
-            {walletConnected ? 'Награда получена' : 'Получить награду'}
+          <button onClick={claimWalletReward}>
+            Получить награду
           </button>
         </div>
       </div>
