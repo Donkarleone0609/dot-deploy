@@ -107,7 +107,7 @@ const Clicker = () => {
 
     // Покупка улучшения
     const buyUpgrade = useCallback(async (upgrade, setUpgrade, basePrice, baseEffect) => {
-        if (clickCount >= upgrade.price && upgrade.count < 3) {
+        if (clickCount >= upgrade.price && upgrade.count < 20) { // Лимит увеличен до 20
             const newClickCount = clickCount - upgrade.price;
             const newCount = upgrade.count + 1;
             const newPrice = upgrade.price * 2;
@@ -276,9 +276,9 @@ const Clicker = () => {
 
             {/* Нижняя панель с кнопками навигации */}
             <div className="navigation-bar">
-                <Link to="/referral" className="nav-button">Referral</Link>
-                <Link to="/" className="nav-button">Home</Link>
-                <Link to="/click-counter" className="nav-button">Clicker</Link>
+                <Link to="/referral" className="nav-button">Рефералы</Link>
+                <Link to="/" className="nav-button">Главная</Link>
+                <Link to="/click-counter" className="nav-button">Кликер</Link>
             </div>
         </div>
     );
@@ -288,13 +288,13 @@ const Clicker = () => {
 const UpgradeButton = React.memo(({ upgrade, setUpgrade, basePrice, baseEffect, label, description, onClick, clickCount }) => (
     <button
         onClick={() => onClick(upgrade, setUpgrade, basePrice, baseEffect)}
-        className={`upgrade-button ${upgrade.count >= 3 ? 'disabled' : ''}`}
-        disabled={clickCount < upgrade.price || upgrade.count >= 3}
+        className={`upgrade-button ${upgrade.count >= 20 ? 'disabled' : ''}`}
+        disabled={clickCount < upgrade.price || upgrade.count >= 20}
     >
         <span>{label}</span>
         <span>{description}</span>
         <span>{upgrade.price} монет</span>
-        <span>Куплено: {upgrade.count}/3</span>
+        <span>Куплено: {upgrade.count}/20</span>
     </button>
 ));
 

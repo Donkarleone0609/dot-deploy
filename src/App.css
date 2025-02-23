@@ -72,3 +72,45 @@ body {
   background-color: #4CAF50;
   color: white;
 }
+.rewards-page {
+  padding: 20px;
+  text-align: center;
+}
+
+.rewards-list {
+  margin-top: 20px;
+}
+
+.reward-item {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.reward-item h3 {
+  margin: 0;
+}
+
+.reward-item p {
+  margin: 5px 0;
+}
+
+.reward-item button {
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.reward-item button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.total-coins {
+  margin-top: 20px;
+  font-size: 1.2em;
+}

@@ -3,7 +3,7 @@ import { database } from './firebase';
 import { ref, set, get, update } from 'firebase/database';
 import { useLocation, Link } from 'react-router-dom';
 import WebApp from '@twa-dev/sdk';
-import './ReferralPage.css'; // Импортируем стили
+import './ReferralPage.css';
 
 const ReferralPage = () => {
     const [chatId, setChatId] = useState('');
@@ -55,7 +55,7 @@ const ReferralPage = () => {
         const queryParams = new URLSearchParams(location.search);
         const refChatId = queryParams.get('start');
 
-        if (refChatId && refChatId !== chatId) {
+        if (refChatId && chatId && refChatId !== chatId) {
             const referralRef = ref(database, `referrals/${refChatId}`);
             const currentUserRef = ref(database, `referrals/${chatId}`);
 
@@ -68,11 +68,29 @@ const ReferralPage = () => {
                         const updatedReferrals = [...referrals, chatId];
                         const updatedCount = updatedReferrals.length;
 
+                        // Вычисляем количество монет за нового реферала
+                        const coinsEarned = 5000 * updatedCount;
+
+                        // Обновляем данные в Firebase
                         update(referralRef, {
                             referralCount: updatedCount,
                             referrals: updatedReferrals,
                         });
 
+                        // Обновляем монеты пользователя
+                        const userRef = ref(database, `users/${refChatId}`);
+                        get(userRef).then((userSnapshot) => {
+                            if (userSnapshot.exists()) {
+                                const userData = userSnapshot.val();
+                                const newClickCount = (userData.clickCount || 0) + coinsEarned;
+
+                                update(userRef, {
+                                    clickCount: newClickCount,
+                                });
+                            }
+                        });
+
+                        // Добавляем refChatId в список "пригласивших" текущего пользователя
                         get(currentUserRef).then((currentUserSnapshot) => {
                             if (currentUserSnapshot.exists()) {
                                 const currentUserData = currentUserSnapshot.val();
@@ -89,7 +107,7 @@ const ReferralPage = () => {
                 }
             });
         }
-    }, [location, chatId]);
+    }, [location.search, chatId]);
 
     // Получение текущего количества рефералов и списка рефералов
     useEffect(() => {
@@ -110,7 +128,7 @@ const ReferralPage = () => {
         if (referralLink) {
             navigator.clipboard.writeText(referralLink)
                 .then(() => alert('Referral link copied to clipboard!'))
-                .catch(() => alert('Failed to copy referral link.'));
+                .catch(() => alert('Failed to copy referral link. Please try again.'));
         }
     };
 

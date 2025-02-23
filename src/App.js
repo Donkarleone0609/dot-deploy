@@ -3,6 +3,7 @@ import { TonConnectUIProvider, useTonConnectUI, useTonWallet, TonConnectButton }
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ReferralPage from './ReferralPage';
 import ClickCounter from './clicker';
+import RewardsPage from './RewardsPage'; // Импортируем новый компонент
 import WebApp from '@twa-dev/sdk';
 import './App.css'; // Импортируем стили
 
@@ -14,6 +15,7 @@ function App() {
           <Route path="/" element={<WalletConnection />} />
           <Route path="/referral" element={<ReferralPage />} />
           <Route path="/click-counter" element={<ClickCounter />} />
+          <Route path="/rewards" element={<RewardsPage />} /> {/* Новый маршрут */}
         </Routes>
       </Router>
     </TonConnectUIProvider>
@@ -69,6 +71,11 @@ function WalletConnection() {
         <div className="ton-connect-button-container">
           <TonConnectButton />
         </div>
+
+        {/* Кнопка для перехода на страницу с наградами */}
+        <Link to="/rewards" className="rewards-button">
+          Получить награды
+        </Link>
       </div>
 
       <NavigationBar />
@@ -82,6 +89,7 @@ const NavigationBar = () => (
     <Link to="/referral" className="nav-button">Referral</Link>
     <Link to="/" className="nav-button">Home</Link>
     <Link to="/click-counter" className="nav-button">Clicker</Link>
+    <Link to="/rewards" className="nav-button">Rewards</Link> {/* Новая ссылка */}
   </div>
 );
 

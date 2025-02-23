@@ -5,8 +5,8 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background-color: #2e3440;
-    color: #ffffff;
+    background-color: #2e3440; /* Основной фон */
+    color: #ffffff; /* Белый текст */
     font-family: Arial, sans-serif;
     padding: 20px;
     text-align: center;
@@ -25,6 +25,7 @@
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    outline: none; /* Убираем хайлайт */
 }
 
 .clicker-button.clicked {
@@ -37,11 +38,12 @@
     margin-top: 20px;
     padding: 10px 20px;
     font-size: 16px;
-    background-color: #4c566a;
-    color: #fff;
+    background-color: #4c566a; /* Цвет кнопки */
+    color: #fff; /* Белый текст */
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    outline: none; /* Убираем хайлайт */
 }
 
 /* Сетка для улучшений */
@@ -61,18 +63,19 @@
     align-items: center;
     justify-content: center;
     padding: 10px;
-    background-color: #1e1e1e;
-    color: #ffffff;
-    border: 2px solid #4c566a;
+    background-color: #1e1e1e; /* Темный фон */
+    color: #ffffff; /* Белый текст */
+    border: 2px solid #4c566a; /* Граница */
     border-radius: 10px;
     cursor: pointer;
     transition: background-color 0.2s ease;
     text-align: center;
     min-height: 100px;
+    outline: none; /* Убираем хайлайт */
 }
 
 .upgrade-button.disabled {
-    background-color: #333;
+    background-color: #333; /* Серый фон для отключенных кнопок */
     cursor: not-allowed;
     opacity: 0.7;
 }
@@ -86,8 +89,8 @@
 .profit-popup {
     position: fixed;
     top: 20px;
-    background-color: #4CAF50;
-    color: white;
+    background-color: #4c566a; /* Цвет фона */
+    color: white; /* Белый текст */
     padding: 10px 20px;
     border-radius: 5px;
     animation: fadeOut 5s forwards;
@@ -104,7 +107,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: #2e3440;
+    background-color: #2e3440; /* Основной фон */
     padding: 10px;
     display: flex;
     justify-content: center;
@@ -113,15 +116,16 @@
 
 .nav-button {
     text-decoration: none;
-    color: #4c566a;
+    color: #ffffff; /* Белый текст */
     font-size: 14px;
     padding: 10px 15px;
-    background-color: #4c566a;
+    background-color: #4c566a; /* Цвет кнопок */
     border-radius: 5px;
     transition: background-color 0.2s ease;
+    outline: none; /* Убираем хайлайт */
 }
 
 .nav-button:hover {
-    background-color: #4c566a;
+    background-color: #5e6778; /* Цвет кнопок при наведении */
     color: white;
 }
