@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import WebApp from '@twa-dev/sdk';
-import { database, ref, get } from './firebase'; // Импортируем Firebase
+import { database, ref, get, set } from './firebase'; // Импортируем Firebase
 import NavigationBar from './NavigationBar'; // Импортируем навигационную панель
+
+// Функция для проверки подписки на Telegram канал
+const checkTelegramSubscription = async (userId) => {
+  const botToken = '7118279667:AAF0EHBOL4lK85mD7KCR8ZeJFX6-xVL2Flc'; // Замените на токен вашего бота
+  const channelId = '@whoisdotcoin'; // Замените на username вашего канала, например, @my_channel
+  const url = `https://api.telegram.org/bot${botToken}/getChatMember?chat_id=${channelId}&user_id=${userId}`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.result.status === 'member' || data.result.status === 'administrator';
+  } catch (error) {
+    console.error('Ошибка при проверке подписки:', error);
+    return false;
+  }
+};
 
 function RewardsPage() {
   const [tonConnectUI] = useTonConnectUI();
@@ -17,33 +33,42 @@ function RewardsPage() {
 
   // Загружаем количество монет из Firebase
   useEffect(() => {
-    if (userId) {
-      const fetchCoins = async () => {
-        const coinsRef = ref(database, `users/${userId}/clickCount`);
-        try {
-          const snapshot = await get(coinsRef);
-          if (snapshot.exists()) {
-            setCoins(snapshot.val());
-          } else {
-            console.log('No coins data available');
-          }
-        } catch (error) {
-          console.error('Error fetching coins:', error);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchCoins();
+    if (!userId) {
+      console.error('ID пользователя Telegram не найден.');
+      setLoading(false);
+      return;
     }
+
+    const fetchCoins = async () => {
+      const coinsRef = ref(database, `users/${userId}/clickCount`);
+      try {
+        const snapshot = await get(coinsRef);
+        if (snapshot.exists()) {
+          setCoins(snapshot.val());
+        } else {
+          console.log('Данные о монетах отсутствуют.');
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке данных:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCoins();
   }, [userId]);
 
   // Проверяем, подписан ли пользователь на Telegram канал
   useEffect(() => {
-    // Здесь можно добавить логику для проверки подписки на канал
-    // Например, через Telegram Bot API
-    setTelegramSubscribed(false); // По умолчанию false, пока не реализована проверка
-  }, []);
+    const checkSubscription = async () => {
+      if (userId) {
+        const isSubscribed = await checkTelegramSubscription(userId);
+        setTelegramSubscribed(isSubscribed);
+      }
+    };
+
+    checkSubscription();
+  }, [userId]);
 
   // Проверяем, подключен ли кошелек
   useEffect(() => {
@@ -65,17 +90,33 @@ function RewardsPage() {
   };
 
   // Функция для получения награды за привязку кошелька
-  const claimWalletReward = () => {
-    if (walletConnected) {
-      setCoins(coins + 5000);
-      alert('Вы получили 5000 монет за привязку TON кошелька!');
-    } else {
+  const claimWalletReward = async () => {
+    if (!walletConnected) {
       alert('Вы еще не привязали TON кошелек.');
+      return;
     }
+
+    // Проверяем, было ли задание уже выполнено
+    const rewardRef = ref(database, `users/${userId}/walletRewardClaimed`);
+    const snapshot = await get(rewardRef);
+
+    if (snapshot.exists() && snapshot.val() === true) {
+      alert('Вы уже получили награду за привязку кошелька.');
+      return;
+    }
+
+    // Начисляем награду
+    setCoins(coins + 5000);
+    await set(rewardRef, true); // Сохраняем состояние выполнения задания
+    alert('Вы получили 5000 монет за привязку TON кошелька!');
   };
 
   if (loading) {
-    return <div>Загрузка...</div>;
+    return <div>Загрузка данных...</div>;
+  }
+
+  if (!userId) {
+    return <div>Ошибка: ID пользователя Telegram не найден.</div>;
   }
 
   return (

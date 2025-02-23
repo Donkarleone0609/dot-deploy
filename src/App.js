@@ -73,9 +73,9 @@ function WalletConnection() {
         </div>
 
         {/* Кнопка для перехода на страницу с наградами */}
-        <Link to="/rewards" className="rewards-button">
+        {/* <Link to="/rewards" className="rewards-button">
           Получить награды
-        </Link>
+        </Link> */}
       </div>
 
       <NavigationBar />

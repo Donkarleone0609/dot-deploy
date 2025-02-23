@@ -276,10 +276,11 @@ const Clicker = () => {
 
             {/* Нижняя панель с кнопками навигации */}
             <div className="navigation-bar">
-                <Link to="/referral" className="nav-button">Рефералы</Link>
-                <Link to="/" className="nav-button">Главная</Link>
-                <Link to="/click-counter" className="nav-button">Кликер</Link>
-            </div>
+      <Link to="/referral" className="nav-button">Referral</Link>
+      <Link to="/" className="nav-button">Home</Link>
+      <Link to="/click-counter" className="nav-button">Clicker</Link>
+      <Link to="/rewards" className="nav-button">Rewards</Link> {/* Новая ссылка */}
+    </div>
         </div>
     );
 };
