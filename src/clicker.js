@@ -81,7 +81,23 @@ const Clicker = () => {
     // Сохранение данных пользователя
     const saveUserData = useCallback(async (userId, data) => {
         const userRef = ref(database, `users/${userId}`);
-        await set(userRef, { ...data, lastSeen: Date.now() });
+        const snapshot = await get(userRef);
+        const existingData = snapshot.exists() ? snapshot.val() : {};
+
+        // Обновляем только данные, связанные с кликером
+        const updatedData = {
+            ...existingData, // Сохраняем существующие данные
+            clickCount: data.clickCount,
+            hasAutoFarm: data.hasAutoFarm,
+            dotCPU: data.dotCPU,
+            dotGPU: data.dotGPU,
+            simpleBotTrader: data.simpleBotTrader,
+            memecoin: data.memecoin,
+            traderAI: data.traderAI,
+            lastSeen: Date.now() // Обновляем время последнего действия
+        };
+
+        await set(userRef, updatedData);
     }, []);
 
     // Обработчик клика
@@ -269,18 +285,18 @@ const Clicker = () => {
 
             {/* Поп-ап с прибылью */}
             {profitPopup !== null && (
-                <div className="profit-popup">
+                <div className="profit-popup clicker-popup">
                     Вы получили {profitPopup} монет за время отсутствия!
                 </div>
             )}
 
             {/* Нижняя панель с кнопками навигации */}
             <div className="navigation-bar">
-      <Link to="/referral" className="nav-button">Referral</Link>
-      <Link to="/" className="nav-button">Home</Link>
-      <Link to="/click-counter" className="nav-button">Clicker</Link>
-      <Link to="/rewards" className="nav-button">Rewards</Link> {/* Новая ссылка */}
-    </div>
+                <Link to="/referral" className="nav-button">Referral</Link>
+                <Link to="/" className="nav-button">Home</Link>
+                <Link to="/click-counter" className="nav-button">Clicker</Link>
+                <Link to="/rewards" className="nav-button">Rewards</Link>
+            </div>
         </div>
     );
 };

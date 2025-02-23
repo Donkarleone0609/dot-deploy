@@ -115,19 +115,39 @@
     z-index: 999;
   }
   
-  /* Поп-ап окно */
-  .profit-popup {
+/* Поп-ап окно в кликере (сверху) */
+.profit-popup.clicker-popup {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4c566a;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    animation: fadeOut 5s forwards;
+}
+
+/* Поп-ап окно в наградах (по центру) */
+.profit-popup.rewards-popup {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: #4c566a; /* Цвет фона */
-    color: white; /* Белый текст */
+    background-color: #4c566a;
+    color: white;
     padding: 20px;
     border-radius: 10px;
     z-index: 1000;
     text-align: center;
-  }
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+}
   
   .profit-popup button {
     background-color: #81a1c1;
