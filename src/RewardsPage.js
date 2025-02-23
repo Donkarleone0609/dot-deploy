@@ -36,6 +36,7 @@ function RewardsPage() {
   const [popupMessage, setPopupMessage] = useState(null); // Сообщение для поп-апа
   const [telegramRewardClaimed, setTelegramRewardClaimed] = useState(false); // Флаг выполнения задания с Telegram
   const [walletRewardClaimed, setWalletRewardClaimed] = useState(false); // Флаг выполнения задания с кошельком
+  const [isLoadingAction, setIsLoadingAction] = useState(false); // Состояние загрузки при выполнении действия
 
   // Получаем ID пользователя Telegram
   const userId = WebApp.initDataUnsafe.user?.id;
@@ -84,12 +85,11 @@ function RewardsPage() {
   }, [userId]);
 
   // Функция для отображения поп-апа
-  const showPopup = (message) => {
+  const showPopup = (message, isSuccess = false) => {
     setPopupMessage(message);
-    confetti(); // Запускаем конфетти
-    setTimeout(() => {
-      setPopupMessage(null); // Автоматически скрываем поп-ап через 5 секунд
-    }, 5000);
+    if (isSuccess) {
+      confetti(); // Запускаем конфетти только при успехе
+    }
   };
 
   // Функция для получения награды за подписку на Telegram канал
@@ -99,6 +99,7 @@ function RewardsPage() {
       return;
     }
 
+    setIsLoadingAction(true); // Начало загрузки
     const isSubscribed = await checkTelegramSubscription(userId);
     if (isSubscribed) {
       const rewardRef = ref(database, `users/${userId}/telegramRewardClaimed`);
@@ -106,6 +107,7 @@ function RewardsPage() {
 
       if (snapshot.exists() && snapshot.val() === true) {
         showPopup('Вы уже получили награду за подписку на Telegram канал.');
+        setIsLoadingAction(false); // Конец загрузки
         return;
       }
 
@@ -118,13 +120,16 @@ function RewardsPage() {
         await set(rewardRef, true); // Сохраняем флаг выполнения задания
         setCoins(newCoins); // Обновляем состояние в React
         setTelegramRewardClaimed(true); // Обновляем локальное состояние
-        showPopup('Вы получили 2000 монет за подписку на Telegram канал!');
+        showPopup('Вы получили 2000 монет за подписку на Telegram канал!', true); // Успех с конфетти
       } catch (error) {
         console.error('Ошибка при обновлении данных:', error);
         showPopup('Произошла ошибка при начислении награды.');
+      } finally {
+        setIsLoadingAction(false); // Конец загрузки
       }
     } else {
       showPopup('Вы еще не подписались на Telegram канал.');
+      setIsLoadingAction(false); // Конец загрузки
     }
   };
 
@@ -140,29 +145,37 @@ function RewardsPage() {
       return;
     }
 
-    // Проверяем, было ли задание уже выполнено
-    const rewardRef = ref(database, `users/${userId}/walletRewardClaimed`);
-    const snapshot = await get(rewardRef);
-
-    if (snapshot.exists() && snapshot.val() === true) {
-      showPopup('Вы уже получили награду за привязку кошелька.');
-      return;
-    }
-
-    // Добавляем 5000 монет в Firebase
-    const coinsRef = ref(database, `users/${userId}/clickCount`);
-    const currentCoins = (await get(coinsRef)).val() || 0;
-    const newCoins = currentCoins + 5000;
+    setIsLoadingAction(true); // Начало загрузки
 
     try {
-      await set(coinsRef, newCoins); // Обновляем монеты в Firebase
+      // Проверяем, было ли задание уже выполнено
+      const rewardRef = ref(database, `users/${userId}/walletRewardClaimed`);
+      const snapshot = await get(rewardRef);
+
+      if (snapshot.exists() && snapshot.val() === true) {
+        showPopup('Вы уже получили награду за привязку кошелька.');
+        setIsLoadingAction(false); // Конец загрузки
+        return;
+      }
+
+      // Добавляем 5000 монет в Firebase
+      const coinsRef = ref(database, `users/${userId}/clickCount`);
+      const currentCoins = (await get(coinsRef)).val() || 0;
+      const newCoins = currentCoins + 5000;
+
+      // Сохраняем данные в Firebase
+      await set(coinsRef, newCoins); // Обновляем монеты
       await set(rewardRef, true); // Сохраняем флаг выполнения задания
-      setCoins(newCoins); // Обновляем состояние в React
-      setWalletRewardClaimed(true); // Обновляем локальное состояние
-      showPopup('Вы получили 5000 монет за привязку TON кошелька!');
+
+      // Обновляем локальное состояние
+      setCoins(newCoins);
+      setWalletRewardClaimed(true);
+      showPopup('Вы получили 5000 монет за привязку TON кошелька!', true); // Успех с конфетти
     } catch (error) {
       console.error('Ошибка при обновлении данных:', error);
       showPopup('Произошла ошибка при начислении награды.');
+    } finally {
+      setIsLoadingAction(false); // Конец загрузки
     }
   };
 
@@ -183,8 +196,8 @@ function RewardsPage() {
           <div className="reward-item">
             <h3>Подписка на Telegram канал</h3>
             <p>Награда: 2000 монет</p>
-            <button onClick={claimTelegramReward}>
-              Получить награду
+            <button onClick={claimTelegramReward} disabled={isLoadingAction}>
+              {isLoadingAction ? 'Загрузка...' : 'Получить награду'}
             </button>
           </div>
         )}
@@ -194,8 +207,8 @@ function RewardsPage() {
           <div className="reward-item">
             <h3>Привязка TON кошелька</h3>
             <p>Награда: 5000 монет</p>
-            <button onClick={claimWalletReward}>
-              Получить награду
+            <button onClick={claimWalletReward} disabled={isLoadingAction}>
+              {isLoadingAction ? 'Загрузка...' : 'Получить награду'}
             </button>
           </div>
         )}
@@ -204,12 +217,15 @@ function RewardsPage() {
         <h3>Ваши монеты: {coins}</h3>
       </div>
 
-      {/* Кастомный поп-ап */}
+      {/* Кастомный поп-ап и оверлей */}
       {popupMessage && (
-        <div className="profit-popup">
-          <p>{popupMessage}</p>
-          <button onClick={() => setPopupMessage(null)}>Закрыть</button>
-        </div>
+        <>
+          <div className="overlay" onClick={() => setPopupMessage(null)} />
+          <div className="profit-popup">
+            <p>{popupMessage}</p>
+            <button onClick={() => setPopupMessage(null)}>Закрыть</button>
+          </div>
+        </>
       )}
 
       {/* Добавляем навигационную панель */}
