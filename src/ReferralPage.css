@@ -1,0 +1,100 @@
+/* Общие стили */
+.referral-page {
+    background-color: #2e3440;
+    min-height: 100vh;
+    padding: 20px;
+    color: #ffffff;
+    text-align: center;
+    position: relative;
+}
+
+/* Кнопка генерации ссылки */
+.generate-link {
+    margin-top: 20px;
+}
+
+.generate-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4c566a;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Реферальная ссылка */
+.referral-link {
+    margin-top: 20px;
+}
+
+.link {
+    color: #4c566a;
+    text-decoration: none;
+    word-break: break-all;
+}
+
+.copy-button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    font-size: 14px;
+    background-color: #4c566a;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Количество рефералов */
+.referral-count {
+    margin-top: 20px;
+}
+
+/* Список рефералов */
+.referrals-list {
+    margin-top: 20px;
+}
+
+.referrals-list ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.referrals-list li {
+    margin: 10px 0;
+}
+
+/* Ошибки */
+.error {
+    color: red;
+    margin-top: 20px;
+}
+
+/* Навигационная панель */
+.navigation-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #3b4252;
+    padding: 10px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.nav-button {
+    text-decoration: none;
+    color: #000000;
+    font-size: 14px;
+    padding: 10px 15px;
+    background-color: #ffffff;
+    border-radius: 5px;
+    transition: background-color 0.2s ease;
+}
+
+.nav-button:hover {
+    background-color: #4c566a;
+    color: white;
+}

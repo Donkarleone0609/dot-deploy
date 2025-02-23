@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { database } from './firebase'; // Импортируем Firebase
-import { ref, set, get, update } from 'firebase/database'; // Импортируем методы Firebase
-import { useLocation, Link } from 'react-router-dom'; // Импортируем useLocation и Link для навигации
-import WebApp from '@twa-dev/sdk'; // Импортируем SDK для Telegram Web Apps
+import { database } from './firebase';
+import { ref, set, get, update } from 'firebase/database';
+import { useLocation, Link } from 'react-router-dom';
+import WebApp from '@twa-dev/sdk';
+import './ReferralPage.css'; // Импортируем стили
 
 const ReferralPage = () => {
-    const [chatId, setChatId] = useState(''); // ID текущего пользователя (chatId из Telegram)
-    const [referralLink, setReferralLink] = useState(''); // Реферальная ссылка
-    const [referralCount, setReferralCount] = useState(0); // Количество рефералов
-    const [referralsList, setReferralsList] = useState([]); // Список рефералов
-    const [error, setError] = useState(''); // Ошибки
-    const location = useLocation(); // Для получения query-параметров
+    const [chatId, setChatId] = useState('');
+    const [referralLink, setReferralLink] = useState('');
+    const [referralCount, setReferralCount] = useState(0);
+    const [referralsList, setReferralsList] = useState([]);
+    const [error, setError] = useState('');
+    const location = useLocation();
 
     // Получение chatId из Telegram Web App
     useEffect(() => {
         if (WebApp.initDataUnsafe.user) {
-            const tgChatId = WebApp.initDataUnsafe.user.id; // Получаем chatId из SDK
-            setChatId(tgChatId); // Устанавливаем chatId в состояние
+            setChatId(WebApp.initDataUnsafe.user.id);
         } else {
             setError('Chat ID not found. Please open this page via Telegram bot.');
         }
@@ -30,21 +30,18 @@ const ReferralPage = () => {
         }
 
         try {
-            const referralRef = ref(database, `referrals/${chatId}`); // Ссылка на данные в Firebase
-
-            // Проверяем, существует ли запись для этого пользователя
+            const referralRef = ref(database, `referrals/${chatId}`);
             const snapshot = await get(referralRef);
+
             if (!snapshot.exists()) {
-                // Если записи нет, создаем новую
                 await set(referralRef, {
-                    referralCount: 0, // Начальное количество рефералов
-                    referrals: [], // Список уникальных рефералов
-                    invitedBy: [], // Список пользователей, которые пригласили текущего пользователя
+                    referralCount: 0,
+                    referrals: [],
+                    invitedBy: [],
                 });
             }
 
-            // Генерация реферальной ссылки
-            const link = `https://t.me/whoisd0t_bot?start=${chatId}`; // Ссылка для Telegram-бота
+            const link = `https://t.me/whoisd0t_bot?start=${chatId}`;
             setReferralLink(link);
             setError('');
         } catch (err) {
@@ -56,30 +53,26 @@ const ReferralPage = () => {
     // Обработка перехода по реферальной ссылке
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
-        const refChatId = queryParams.get('start'); // Получаем chatId создателя ссылки из URL
+        const refChatId = queryParams.get('start');
 
-        if (refChatId && refChatId !== chatId) { // Проверяем, что это не сам пользователь
+        if (refChatId && refChatId !== chatId) {
             const referralRef = ref(database, `referrals/${refChatId}`);
             const currentUserRef = ref(database, `referrals/${chatId}`);
 
             get(referralRef).then((snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    const referrals = data.referrals || []; // Получаем список рефералов
+                    const referrals = data.referrals || [];
 
-                    // Проверяем, есть ли текущий пользователь в списке рефералов
                     if (!referrals.includes(chatId)) {
-                        // Добавляем текущий пользователь в список рефералов
                         const updatedReferrals = [...referrals, chatId];
                         const updatedCount = updatedReferrals.length;
 
-                        // Обновляем данные в Firebase
                         update(referralRef, {
                             referralCount: updatedCount,
                             referrals: updatedReferrals,
                         });
 
-                        // Добавляем refChatId в список "пригласивших" текущего пользователя
                         get(currentUserRef).then((currentUserSnapshot) => {
                             if (currentUserSnapshot.exists()) {
                                 const currentUserData = currentUserSnapshot.val();
@@ -106,7 +99,7 @@ const ReferralPage = () => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     setReferralCount(data.referralCount || 0);
-                    setReferralsList(data.referrals || []); // Обновляем список рефералов
+                    setReferralsList(data.referrals || []);
                 }
             });
         }
@@ -122,136 +115,62 @@ const ReferralPage = () => {
     };
 
     return (
-        <div style={{ 
-            backgroundColor: '#404040', 
-            minHeight: '100vh', 
-            padding: '20px', 
-            color: '#ffffff', 
-            textAlign: 'center',
-            position: 'relative', // Для позиционирования нижней панели
-        }}>
+        <div className="referral-page">
             <h1>Referral System</h1>
 
             {/* Кнопка для генерации реферальной ссылки */}
-            <div style={{ marginTop: '20px' }}>
-                <button
-                    onClick={generateReferralLink}
-                    style={{
-                        padding: '10px 20px',
-                        fontSize: '16px',
-                        backgroundColor: '#4CAF50',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer',
-                    }}
-                >
+            <div className="generate-link">
+                <button onClick={generateReferralLink} className="generate-button">
                     Generate Referral Link
                 </button>
             </div>
 
             {/* Отображение реферальной ссылки и кнопка для копирования */}
             {referralLink && (
-                <div style={{ marginTop: '20px' }}>
+                <div className="referral-link">
                     <p>Your Referral Link:</p>
-                    <a
-                        href={referralLink}
-                        style={{
-                            color: '#4CAF50',
-                            textDecoration: 'none',
-                            wordBreak: 'break-all',
-                        }}
-                    >
+                    <a href={referralLink} className="link">
                         {referralLink}
                     </a>
-                    <button
-                        onClick={copyToClipboard}
-                        style={{
-                            marginLeft: '10px',
-                            padding: '5px 10px',
-                            fontSize: '14px',
-                            backgroundColor: '#4CAF50',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '5px',
-                            cursor: 'pointer',
-                        }}
-                    >
+                    <button onClick={copyToClipboard} className="copy-button">
                         Copy Link
                     </button>
                 </div>
             )}
 
             {/* Отображение количества рефералов */}
-            <div style={{ marginTop: '20px' }}>
+            <div className="referral-count">
                 <p>Total Referrals: {referralCount}</p>
             </div>
 
             {/* Отображение списка рефералов */}
             {referralsList.length > 0 && (
-                <div style={{ marginTop: '20px' }}>
+                <div className="referrals-list">
                     <h3>Referrals List:</h3>
-                    <ul style={{ listStyleType: 'none', padding: 0 }}>
+                    <ul>
                         {referralsList.map((refChatId, index) => (
-                            <li key={index} style={{ margin: '10px 0' }}>
-                                User ID: {refChatId}
-                            </li>
+                            <li key={index}>User ID: {refChatId}</li>
                         ))}
                     </ul>
                 </div>
             )}
 
             {/* Отображение ошибок */}
-            {error && (
-                <p style={{ color: 'red', marginTop: '20px' }}>{error}</p>
-            )}
+            {error && <p className="error">{error}</p>}
 
             {/* Нижняя панель с кнопками навигации */}
-            <div style={{
-                position: 'fixed',
-                bottom: '0',
-                left: '0',
-                right: '0',
-                backgroundColor: '#333',
-                padding: '10px',
-                textAlign: 'center',
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '20px', // Расстояние между кнопками
-            }}>
-                <Link to="/referral" style={{
-                    textDecoration: 'none',
-                    color: '#000000',
-                    fontSize: '16px',
-                    padding: '10px 20px',
-                    backgroundColor: '#ffff',
-                    borderRadius: '5px',
-                }}>
-                    Перейти к реферальной системе
-                </Link>
-                <Link to="/" style={{
-                    textDecoration: 'none',
-                    color: '#000000',
-                    fontSize: '16px',
-                    padding: '10px 20px',
-                    backgroundColor: '#ffff',
-                    borderRadius: '5px',
-                }}>
-                    Home
-                </Link>
-                <Link to="/click-counter" style={{
-                    textDecoration: 'none',
-                    color: '#000000',
-                    fontSize: '16px',
-                    padding: '10px 20px',
-                    backgroundColor: '#ffff',
-                    borderRadius: '5px',
-                }}>
-                    Перейти к Click Counter
-                </Link>
-            </div>
+            <NavigationBar />
         </div>
     );
 };
+
+// Компонент для навигации
+const NavigationBar = () => (
+    <div className="navigation-bar">
+        <Link to="/referral" className="nav-button">Referral</Link>
+        <Link to="/" className="nav-button">Home</Link>
+        <Link to="/click-counter" className="nav-button">Clicker</Link>
+    </div>
+);
 
 export default ReferralPage;
