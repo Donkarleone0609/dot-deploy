@@ -29,7 +29,7 @@ function WalletConnection() {
   const [firstName, setFirstName] = useState('');
   const [isMobile, setIsMobile] = useState(true);
 
-  const onlyMobile = false;
+  const onlyMobile = true;
 
   // Проверяем, является ли устройство мобильным
   useEffect(() => {
