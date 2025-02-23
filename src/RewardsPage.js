@@ -6,8 +6,8 @@ import NavigationBar from './NavigationBar'; // Импортируем нави�
 
 // Функция для проверки подписки на Telegram канал
 const checkTelegramSubscription = async (userId) => {
-  const botToken = '7118279667:AAF0EHBOL4lK85mD7KCR8ZeJFX6-xVL2Flc'; // Замените на токен вашего бота
-  const channelId = '@whoisdotcoin'; // Замените на username вашего канала, например, @my_channel
+  const botToken = 'ВАШ_ТОКЕН_БОТА'; // Замените на токен вашего бота
+  const channelId = '@ВАШ_КАНАЛ'; // Замените на username вашего канала, например, @my_channel
   const url = `https://api.telegram.org/bot${botToken}/getChatMember?chat_id=${channelId}&user_id=${userId}`;
 
   try {
@@ -105,10 +105,20 @@ function RewardsPage() {
       return;
     }
 
-    // Начисляем награду
-    setCoins(coins + 5000);
-    await set(rewardRef, true); // Сохраняем состояние выполнения задания
-    alert('Вы получили 5000 монет за привязку TON кошелька!');
+    // Добавляем 5000 монет в Firebase
+    const coinsRef = ref(database, `users/${userId}/clickCount`);
+    const currentCoins = (await get(coinsRef)).val() || 0;
+    const newCoins = currentCoins + 5000;
+
+    try {
+      await set(coinsRef, newCoins); // Обновляем монеты в Firebase
+      await set(rewardRef, true); // Сохраняем флаг выполнения задания
+      setCoins(newCoins); // Обновляем состояние в React
+      alert('Вы получили 5000 монет за привязку TON кошелька!');
+    } catch (error) {
+      console.error('Ошибка при обновлении данных:', error);
+      alert('Произошла ошибка при начислении награды.');
+    }
   };
 
   if (loading) {
