@@ -31,10 +31,29 @@ const Clicker = () => {
 
     // Отслеживаем видимость мини-приложения
     useEffect(() => {
-        const handleVisibilityChange = () => setIsAppVisible(!document.hidden);
+        const handleVisibilityChange = () => {
+            const isVisible = !document.hidden;
+            setIsAppVisible(isVisible);
+
+            if (isVisible && userId) {
+                calculateOfflineProfit();
+            } else if (!isVisible && userId) {
+                saveUserData(userId, {
+                    clickCount,
+                    hasAutoFarm,
+                    dotCPU,
+                    dotGPU,
+                    simpleBotTrader,
+                    memecoin,
+                    traderAI,
+                    lastSeen: Date.now()
+                });
+            }
+        };
+
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, []);
+    }, [userId, clickCount, hasAutoFarm, dotCPU, dotGPU, simpleBotTrader, memecoin, traderAI]);
 
     // Загрузка данных пользователя
     const loadUserData = useCallback(async (userId) => {
@@ -52,29 +71,6 @@ const Clicker = () => {
             setSimpleBotTrader(data.simpleBotTrader || { count: 0, price: 2000 });
             setMemecoin(data.memecoin || { count: 0, price: 3000 });
             setTraderAI(data.traderAI || { count: 0, price: 5000 });
-
-            // Рассчитываем прибыль за время отсутствия
-            if (data.hasAutoFarm && data.lastSeen) {
-                const currentTime = Date.now();
-                const timeDiff = currentTime - data.lastSeen;
-                const coinsEarned = calculateAutoFarmProfit(timeDiff, data);
-                if (coinsEarned > 0) {
-                    const newClickCount = (data.clickCount || 0) + coinsEarned;
-                    setClickCount(newClickCount);
-                    setProfitPopup(`Вы получили ${coinsEarned} монет за время отсутствия!`);
-                    setTimeout(() => setProfitPopup(null), 5000);
-
-                    await saveUserData(userId, {
-                        clickCount: newClickCount,
-                        hasAutoFarm: data.hasAutoFarm,
-                        dotCPU: data.dotCPU,
-                        dotGPU: data.dotGPU,
-                        simpleBotTrader: data.simpleBotTrader,
-                        memecoin: data.memecoin,
-                        traderAI: data.traderAI
-                    });
-                }
-            }
         }
     }, []);
 
@@ -93,7 +89,7 @@ const Clicker = () => {
             simpleBotTrader: data.simpleBotTrader,
             memecoin: data.memecoin,
             traderAI: data.traderAI,
-            lastSeen: Date.now()
+            lastSeen: data.lastSeen || Date.now()
         };
 
         await set(userRef, updatedData);
@@ -150,16 +146,42 @@ const Clicker = () => {
     }, [clickCount, userId, saveUserData, hasAutoFarm, dotCPU, dotGPU, simpleBotTrader, memecoin, traderAI]);
 
     // Рассчитываем прибыль автофарминга
-    const calculateAutoFarmProfit = useCallback((timeDiff, data) => {
+    const calculateAutoFarmProfit = useCallback((timeDiff) => {
         let profit = 0;
 
-        if (data.hasAutoFarm) profit += Math.floor(timeDiff / 5000);
-        if (data.simpleBotTrader?.count) profit += data.simpleBotTrader.count * 3 * Math.floor(timeDiff / 5000);
-        if (data.traderAI?.count) profit += data.traderAI.count * 14 * Math.floor(timeDiff / 5000);
-        if (data.memecoin?.count) profit *= 1 + (0.02 * data.memecoin.count);
+        if (hasAutoFarm) profit += Math.floor(timeDiff / 5000);
+        if (simpleBotTrader.count) profit += simpleBotTrader.count * 3 * Math.floor(timeDiff / 5000);
+        if (traderAI.count) profit += traderAI.count * 14 * Math.floor(timeDiff / 5000);
+        if (memecoin.count) profit *= 1 + (0.02 * memecoin.count);
 
         return Math.floor(profit);
-    }, []);
+    }, [hasAutoFarm, simpleBotTrader, traderAI, memecoin]);
+
+    // Расчет прибыли за время отсутствия
+    const calculateOfflineProfit = useCallback(async () => {
+        if (userId && lastSeen) {
+            const currentTime = Date.now();
+            const timeDiff = currentTime - lastSeen;
+            const coinsEarned = calculateAutoFarmProfit(timeDiff);
+
+            if (coinsEarned > 0) {
+                const newClickCount = clickCount + coinsEarned;
+                setClickCount(newClickCount);
+                setProfitPopup(`Вы получили ${coinsEarned} монет за время отсутствия!`);
+                setTimeout(() => setProfitPopup(null), 5000);
+
+                await saveUserData(userId, {
+                    clickCount: newClickCount,
+                    hasAutoFarm,
+                    dotCPU,
+                    dotGPU,
+                    simpleBotTrader,
+                    memecoin,
+                    traderAI
+                });
+            }
+        }
+    }, [userId, lastSeen, clickCount, hasAutoFarm, dotCPU, dotGPU, simpleBotTrader, memecoin, traderAI, calculateAutoFarmProfit, saveUserData]);
 
     // Автофармилка
     useEffect(() => {
@@ -196,7 +218,8 @@ const Clicker = () => {
                     dotGPU,
                     simpleBotTrader,
                     memecoin,
-                    traderAI
+                    traderAI,
+                    lastSeen: Date.now()
                 });
             }
         };
