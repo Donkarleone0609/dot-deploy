@@ -35,7 +35,6 @@ const ReferralPage = () => {
                 await set(referralRef, {
                     referralCount: 0,
                     referrals: [],
-                    invitedBy: [],
                 });
             }
 

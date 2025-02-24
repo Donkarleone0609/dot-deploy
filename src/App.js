@@ -60,49 +60,20 @@ function WalletConnection() {
 
   const handleReferral = async (refChatId, chatId) => {
     const referralRef = ref(database, `referrals/${refChatId}`);
-    const currentUserRef = ref(database, `referrals/${chatId}`);
 
     try {
       const snapshot = await get(referralRef);
       if (snapshot.exists()) {
-        const data = snapshot.val();
-        const referrals = data.referrals || [];
-
-        if (!referrals.includes(chatId)) {
-          const updatedReferrals = [...referrals, chatId];
-          const updatedCount = updatedReferrals.length;
-
-          await runTransaction(referralRef, (referralData) => {
-            if (referralData) {
-              referralData.referralCount = updatedCount;
-              referralData.referrals = updatedReferrals;
-            }
-            return referralData;
-          });
-
-          const userRef = ref(database, `users/${refChatId}`);
-          const userSnapshot = await get(userRef);
-          if (userSnapshot.exists()) {
-            const userData = userSnapshot.val();
-            const newClickCount = (userData.clickCount || 0) + 5000 * updatedCount;
-
-            await update(userRef, {
-              clickCount: newClickCount,
-            });
-          }
-
-          const currentUserSnapshot = await get(currentUserRef);
-          if (currentUserSnapshot.exists()) {
-            const currentUserData = currentUserSnapshot.val();
-            const invitedBy = currentUserData.invitedBy || [];
-
-            if (!invitedBy.includes(refChatId)) {
-              await update(currentUserRef, {
-                invitedBy: [...invitedBy, refChatId],
-              });
+        await runTransaction(referralRef, (referralData) => {
+          if (referralData) {
+            referralData.referralCount = (referralData.referralCount || 0) + 1;
+            referralData.referrals = referralData.referrals || [];
+            if (!referralData.referrals.includes(chatId)) {
+              referralData.referrals.push(chatId);
             }
           }
-        }
+          return referralData;
+        });
       }
     } catch (err) {
       console.error('Error handling referral:', err);
