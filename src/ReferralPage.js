@@ -18,7 +18,7 @@ const ReferralPage = () => {
   useEffect(() => {
     if (chatId) {
       // Генерация реферальной ссылки
-      const link = `https://t.me/whoisd0t_bot/dot?start=${chatId}`;
+      const link = `https://t.me/whoisd0t_bot?start=${chatId}`;
       setReferralLink(link);
 
       // Проверяем, существует ли запись в Firebase
