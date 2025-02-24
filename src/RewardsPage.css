@@ -1,0 +1,160 @@
+/* Общие стили */
+.rewards-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #2e3440; /* Основной фон */
+    color: #ffffff; /* Белый текст */
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Заголовок */
+.rewards-page h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: white;
+}
+
+/* Список наград */
+.rewards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Элемент награды */
+.reward-item {
+    background-color: #3b4252; /* Цвет фона элемента */
+    padding: 20px;
+    border-radius: 25px; /* Скругленные углы */
+    border: 2px solid #4c566a; /* Граница */
+    text-align: center;
+}
+
+.reward-item h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: #d8dee9; /* Светлый текст */
+}
+
+.reward-item p {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    color: #d8dee9; /* Светлый текст */
+}
+
+/* Ссылка на Telegram */
+.telegram-link {
+    display: inline-block;
+    margin-bottom: 15px;
+    color: #81a1c1; /* Голубой цвет */
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.3s ease;
+}
+
+.telegram-link:hover {
+    color: #5e81ac; /* Цвет при наведении */
+}
+
+/* Кнопки */
+.reward-item .button {
+    width: 100%; /* Ширина кнопки равна ширине текстового поля */
+    padding: 15px 20px;
+    font-size: 1rem;
+    background-color: #434c5e; /* Цвет кнопки */
+    color: #fff; /* Белый текст */
+    border: none;
+    border-radius: 25px; /* Скругленные углы */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1; /* Убираем лишний отступ для текста */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Тень */
+}
+
+.reward-item .button:disabled {
+    background-color: #5e6775; /* Цвет отключенной кнопки */
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.reward-item .button:hover:not(:disabled) {
+    background-color: #5e6775; /* Эффект при наведении */
+    transform: translateY(-2px); /* Легкий подъем */
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3); /* Увеличенная тень */
+}
+
+.reward-item .button:active:not(:disabled) {
+    transform: translateY(0); /* Сброс подъема при нажатии */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Возврат тени */
+}
+
+/* Общее количество монет */
+.total-coins {
+    margin-top: 20px;
+    font-size: 1.2rem;
+    color: #d8dee9; /* Светлый текст */
+}
+
+/* Попап */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7); /* Темный полупрозрачный фон */
+    z-index: 900;
+}
+
+.profit-popup.rewards-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #4c566a; /* Цвет фона попапа */
+    padding: 20px;
+    border-radius: 10px; /* Скругленные углы */
+    z-index: 1000;
+    text-align: center;
+}
+
+.profit-popup.rewards-popup p {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    border-radius: 25px;
+    color: #d8dee9; /* Светлый текст */
+}
+
+.profit-popup.rewards-popup button {
+    background-color: #81a1c1; /* Цвет кнопки в попапе */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 25px; /* Скругленные углы */
+    cursor: pointer;
+    margin-top: 10px;
+    
+}
+
+/* Индикатор загрузки */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.loading-label {
+    font-size: 1.5rem;
+    color: #d8dee9; /* Светлый текст */
+}

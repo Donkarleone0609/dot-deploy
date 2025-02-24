@@ -4,7 +4,7 @@ import WebApp from '@twa-dev/sdk';
 import { database, ref, get, set } from './firebase';
 import NavigationBar from './NavigationBar';
 import confetti from 'canvas-confetti';
-import './Clicker.css';
+import './RewardsPage.css'; // Импортируем новый CSS-файл
 
 // Check Telegram subscription
 const checkTelegramSubscription = async (userId) => {
@@ -171,6 +171,7 @@ function RewardsPage() {
                   Перейти в Telegram канал
                 </a>
                 <button
+                  className="button"
                   onClick={claimTelegramReward}
                   disabled={isLoadingTelegram}
                 >
@@ -184,6 +185,7 @@ function RewardsPage() {
                 <h3>Привязка TON кошелька</h3>
                 <p>Награда: 5000 монет</p>
                 <button
+                  className="button"
                   onClick={claimWalletReward}
                   disabled={isLoadingWallet}
                 >
@@ -201,7 +203,7 @@ function RewardsPage() {
               <div className="overlay" onClick={() => setPopupMessage(null)} />
               <div className="profit-popup rewards-popup">
                 <p>{popupMessage}</p>
-                <button onClick={() => setPopupMessage(null)}>Закрыть</button>
+                <button className="button" onClick={() => setPopupMessage(null)}>Закрыть</button>
               </div>
             </>
           )}

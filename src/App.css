@@ -81,12 +81,13 @@ body {
   margin-top: 20px;
 }
 
-.reward-item {
+/* .reward-item {
   border: 1px solid #ccc;
+  border-radius: 25px;
   padding: 10px;
   margin-bottom: 10px;
   border-radius: 5px;
-}
+} */
 
 .reward-item h3 {
   margin: 0;
