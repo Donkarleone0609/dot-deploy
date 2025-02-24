@@ -156,10 +156,13 @@ const Clicker = () => {
     const calculateAutoFarmProfit = useCallback((timeDiff) => {
         let profit = 0;
 
-        if (hasAutoFarm) profit += Math.floor(timeDiff / 5000);
-        if (simpleBotTrader.count) profit += simpleBotTrader.count * 3 * Math.floor(timeDiff / 5000);
-        if (traderAI.count) profit += traderAI.count * 14 * Math.floor(timeDiff / 5000);
-        if (memecoin.count) profit *= 1 + (0.02 * memecoin.count);
+        // Базовая прибыль от автофарма
+        if (hasAutoFarm) profit += Math.floor(timeDiff / 5000); // 1 монета каждые 5 секунд
+
+        // Прибыль от улучшений
+        if (simpleBotTrader.count) profit += simpleBotTrader.count * 3 * Math.floor(timeDiff / 5000); // 3 монеты каждые 5 секунд за каждый Bot Trader
+        if (traderAI.count) profit += traderAI.count * 14 * Math.floor(timeDiff / 5000); // 14 монет каждые 5 секунд за каждый Trader AI
+        if (memecoin.count) profit *= 1 + (0.02 * memecoin.count); // +2% к профиту за каждый Memecoin
 
         return Math.floor(profit);
     }, [hasAutoFarm, simpleBotTrader, traderAI, memecoin]);
@@ -269,7 +272,7 @@ const Clicker = () => {
                 </div>
                 {/* Таймер восстановления энергии */}
                 <div className="energy-timer">
-                    {energy < 100 ? ` ${timeToEnergy} s` : ''}
+                    {energy < 100 ? `+1 через ${timeToEnergy} сек` : ''}
                 </div>
             </div>
 
