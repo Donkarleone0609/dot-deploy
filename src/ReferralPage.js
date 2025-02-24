@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useTonWallet } from '@tonconnect/ui-react';
-import { database, ref, get, set } from './firebase';
-import { useLocation, Link } from 'react-router-dom';
+import { database, ref, set, get } from './firebase';
 import WebApp from '@twa-dev/sdk';
+import { Link } from 'react-router-dom';
 
 const ReferralPage = () => {
-  const wallet = useTonWallet();
   const [referralLink, setReferralLink] = useState('');
   const [referralCount, setReferralCount] = useState(0);
-  const location = useLocation();
   const [chatId, setChatId] = useState('');
 
   useEffect(() => {
@@ -20,14 +17,18 @@ const ReferralPage = () => {
 
   useEffect(() => {
     if (chatId) {
-      const link = `https://t.me/whoisd0t_bot/dot?start=${chatId}`; // Используем вашу ссылку
+      // Генерация реферальной ссылки
+      const link = `https://t.me/whoisd0t_bot/dot?start=${chatId}`;
       setReferralLink(link);
 
-      // Получаем текущее количество рефералов
+      // Проверяем, существует ли запись в Firebase
       const referralRef = ref(database, `referrals/${chatId}`);
       get(referralRef).then((snapshot) => {
         if (snapshot.exists()) {
           setReferralCount(snapshot.val().referralCount || 0);
+        } else {
+          // Если записи нет, создаем ее с referralCount = 0
+          set(referralRef, { referralCount: 0 });
         }
       });
     }

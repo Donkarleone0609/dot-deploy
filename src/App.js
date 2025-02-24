@@ -6,7 +6,7 @@ import ClickCounter from './clicker';
 import RewardsPage from './RewardsPage';
 import WebApp from '@twa-dev/sdk';
 import { database } from './firebase';
-import { ref, get, update, runTransaction } from 'firebase/database';
+import { ref, runTransaction } from 'firebase/database';
 import './App.css';
 
 function App() {
@@ -52,31 +52,27 @@ function WalletConnection() {
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const refChatId = queryParams.get('start');
-  
-    if (refChatId && chatId && refChatId !== chatId) {
-      handleReferral(refChatId, chatId);
-    }
-  }, [location.search, chatId]);
 
-  const handleReferral = async (refChatId, chatId) => {
+    if (refChatId) {
+      handleReferral(refChatId);
+    }
+  }, [location.search]);
+
+  const handleReferral = async (refChatId) => {
     const referralRef = ref(database, `referrals/${refChatId}`);
 
     try {
-      const snapshot = await get(referralRef);
-      if (snapshot.exists()) {
-        await runTransaction(referralRef, (referralData) => {
-          if (referralData) {
-            referralData.referralCount = (referralData.referralCount || 0) + 1;
-            referralData.referrals = referralData.referrals || [];
-            if (!referralData.referrals.includes(chatId)) {
-              referralData.referrals.push(chatId);
-            }
-          }
-          return referralData;
-        });
-      }
+      await runTransaction(referralRef, (referralData) => {
+        if (referralData) {
+          referralData.referralCount = (referralData.referralCount || 0) + 1;
+        } else {
+          referralData = { referralCount: 1 };
+        }
+        return referralData;
+      });
+      console.log('Referral count updated successfully');
     } catch (err) {
-      console.error('Error handling referral:', err);
+      console.error('Error updating referral count:', err);
     }
   };
 
