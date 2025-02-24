@@ -52,7 +52,7 @@ function WalletConnection() {
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const refChatId = queryParams.get('start');
-
+  
     if (refChatId && chatId && refChatId !== chatId) {
       handleReferral(refChatId, chatId);
     }

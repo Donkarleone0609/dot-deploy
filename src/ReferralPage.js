@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTonWallet } from '@tonconnect/ui-react';
 import { database, ref, get, set } from './firebase';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import WebApp from '@twa-dev/sdk';
 
 const ReferralPage = () => {
@@ -20,7 +20,7 @@ const ReferralPage = () => {
 
   useEffect(() => {
     if (chatId) {
-      const link = `https://your-app-url.com?start=${chatId}`;
+      const link = `https://t.me/whoisd0t_bot/dot?start=${chatId}`; // Используем вашу ссылку
       setReferralLink(link);
 
       // Получаем текущее количество рефералов
@@ -46,8 +46,21 @@ const ReferralPage = () => {
       <input type="text" value={referralLink} readOnly />
       <button onClick={handleCopyLink}>Copy Link</button>
       <p>Total referrals: {referralCount}</p>
+
+      {/* Навигационные кнопки */}
+      <NavigationBar />
     </div>
   );
 };
+
+// Компонент навигации
+const NavigationBar = () => (
+  <div className="navigation-bar">
+    <Link to="/referral" className="nav-button">Referral</Link>
+    <Link to="/" className="nav-button">Home</Link>
+    <Link to="/click-counter" className="nav-button">Clicker</Link>
+    <Link to="/rewards" className="nav-button">Rewards</Link>
+  </div>
+);
 
 export default ReferralPage;
