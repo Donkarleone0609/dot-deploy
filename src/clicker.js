@@ -14,11 +14,11 @@ const Clicker = () => {
     const [isAppVisible, setIsAppVisible] = useState(true);
 
     // Состояния для улучшений
-    const [dotCPU, setDotCPU] = useState({ count: 0, price: 1500 }); // Увеличена цена
-    const [dotGPU, setDotGPU] = useState({ count: 0, price: 1500 }); // Увеличена цена
-    const [simpleBotTrader, setSimpleBotTrader] = useState({ count: 0, price: 2000 }); // Увеличена цена
-    const [memecoin, setMemecoin] = useState({ count: 0, price: 3000 }); // Увеличена цена
-    const [traderAI, setTraderAI] = useState({ count: 0, price: 5000 }); // Увеличена цена
+    const [dotCPU, setDotCPU] = useState({ count: 0, price: 1500 });
+    const [dotGPU, setDotGPU] = useState({ count: 0, price: 1500 });
+    const [simpleBotTrader, setSimpleBotTrader] = useState({ count: 0, price: 2000 });
+    const [memecoin, setMemecoin] = useState({ count: 0, price: 3000 });
+    const [traderAI, setTraderAI] = useState({ count: 0, price: 5000 });
 
     // Получаем ID пользователя из Telegram Mini App
     useEffect(() => {
@@ -61,7 +61,7 @@ const Clicker = () => {
                 if (coinsEarned > 0) {
                     const newClickCount = (data.clickCount || 0) + coinsEarned;
                     setClickCount(newClickCount);
-                    setProfitPopup(coinsEarned);
+                    setProfitPopup(`Вы получили ${coinsEarned} монет за время отсутствия!`);
                     setTimeout(() => setProfitPopup(null), 5000);
 
                     await saveUserData(userId, {
@@ -84,9 +84,8 @@ const Clicker = () => {
         const snapshot = await get(userRef);
         const existingData = snapshot.exists() ? snapshot.val() : {};
 
-        // Обновляем только данные, связанные с кликером
         const updatedData = {
-            ...existingData, // Сохраняем существующие данные
+            ...existingData,
             clickCount: data.clickCount,
             hasAutoFarm: data.hasAutoFarm,
             dotCPU: data.dotCPU,
@@ -94,7 +93,7 @@ const Clicker = () => {
             simpleBotTrader: data.simpleBotTrader,
             memecoin: data.memecoin,
             traderAI: data.traderAI,
-            lastSeen: Date.now() // Обновляем время последнего действия
+            lastSeen: Date.now()
         };
 
         await set(userRef, updatedData);
@@ -103,7 +102,7 @@ const Clicker = () => {
     // Обработчик клика
     const handleClick = useCallback(async () => {
         setIsClicked(true);
-        const newClickCount = clickCount + 1 + (dotCPU.count * 2) + (dotGPU.count * 2); // Фиксированный бонус
+        const newClickCount = clickCount + 1 + (dotCPU.count * 2) + (dotGPU.count * 2);
         setClickCount(newClickCount);
 
         if (userId) {
@@ -122,19 +121,24 @@ const Clicker = () => {
     }, [clickCount, dotCPU, dotGPU, hasAutoFarm, userId, saveUserData]);
 
     // Покупка улучшения
-    const buyUpgrade = useCallback(async (upgrade, setUpgrade, basePrice, baseEffect) => {
-        if (clickCount >= upgrade.price && upgrade.count < 20) { // Лимит 20 улучшений
+    const buyUpgrade = useCallback(async (upgrade, setUpgrade, basePrice, baseEffect, label) => {
+        if (clickCount >= upgrade.price && upgrade.count < 20) {
             const newClickCount = clickCount - upgrade.price;
             const newCount = upgrade.count + 1;
-            const newPrice = upgrade.price * 1.5; // Увеличиваем цену на 50% за каждый уровень
+            const newPrice = upgrade.price * 1.5;
 
             setClickCount(newClickCount);
             setUpgrade({ count: newCount, price: newPrice });
 
+            // Если это Default Miner, обновляем hasAutoFarm
+            if (label === "Default Miner") {
+                setHasAutoFarm(true);
+            }
+
             if (userId) {
                 await saveUserData(userId, {
                     clickCount: newClickCount,
-                    hasAutoFarm,
+                    hasAutoFarm: label === "Default Miner" ? true : hasAutoFarm,
                     dotCPU,
                     dotGPU,
                     simpleBotTrader,
@@ -143,16 +147,16 @@ const Clicker = () => {
                 });
             }
         }
-    }, [clickCount, userId, saveUserData]);
+    }, [clickCount, userId, saveUserData, hasAutoFarm, dotCPU, dotGPU, simpleBotTrader, memecoin, traderAI]);
 
     // Рассчитываем прибыль автофарминга
     const calculateAutoFarmProfit = useCallback((timeDiff, data) => {
         let profit = 0;
 
         if (data.hasAutoFarm) profit += Math.floor(timeDiff / 5000);
-        if (data.simpleBotTrader?.count) profit += data.simpleBotTrader.count * 3 * Math.floor(timeDiff / 5000); // Фиксированный бонус
-        if (data.traderAI?.count) profit += data.traderAI.count * 14 * Math.floor(timeDiff / 5000); // Фиксированный бонус
-        if (data.memecoin?.count) profit *= 1 + (0.02 * data.memecoin.count); // Процентный бонус
+        if (data.simpleBotTrader?.count) profit += data.simpleBotTrader.count * 3 * Math.floor(timeDiff / 5000);
+        if (data.traderAI?.count) profit += data.traderAI.count * 14 * Math.floor(timeDiff / 5000);
+        if (data.memecoin?.count) profit *= 1 + (0.02 * data.memecoin.count);
 
         return Math.floor(profit);
     }, []);
@@ -161,7 +165,7 @@ const Clicker = () => {
     useEffect(() => {
         if (hasAutoFarm && isAppVisible) {
             const interval = setInterval(async () => {
-                const newClickCount = clickCount + 1 + (simpleBotTrader.count * 3) + (traderAI.count * 14); // Фиксированный бонус
+                const newClickCount = clickCount + 1 + (simpleBotTrader.count * 3) + (traderAI.count * 14);
                 setClickCount(newClickCount);
 
                 if (userId) {
@@ -219,7 +223,7 @@ const Clicker = () => {
             {/* Кнопка покупки автофармилки */}
             {!hasAutoFarm && (
                 <button
-                    onClick={() => buyUpgrade({ count: 0, price: 1000 }, setHasAutoFarm, 1000, 1)} // Увеличена цена
+                    onClick={() => buyUpgrade({ count: 0, price: 1000 }, setHasAutoFarm, 1000, 1, "Default Miner")}
                     className="upgrade-button"
                     disabled={clickCount < 1000}
                 >
@@ -285,7 +289,7 @@ const Clicker = () => {
             {/* Поп-ап с прибылью */}
             {profitPopup !== null && (
                 <div className="profit-popup clicker-popup">
-                    Вы получили {profitPopup} монет за время отсутствия!
+                    {profitPopup}
                 </div>
             )}
 
@@ -303,7 +307,7 @@ const Clicker = () => {
 // Компонент для кнопок улучшений
 const UpgradeButton = React.memo(({ upgrade, setUpgrade, basePrice, baseEffect, label, description, onClick, clickCount }) => (
     <button
-        onClick={() => onClick(upgrade, setUpgrade, basePrice, baseEffect)}
+        onClick={() => onClick(upgrade, setUpgrade, basePrice, baseEffect, label)}
         className={`upgrade-button ${upgrade.count >= 20 ? 'disabled' : ''}`}
         disabled={clickCount < upgrade.price || upgrade.count >= 20}
     >
