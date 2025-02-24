@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { database } from './firebase';
-import { ref, set, get, update, runTransaction } from 'firebase/database';
+import { ref, set, get } from 'firebase/database';
 import { useLocation, Link } from 'react-router-dom';
 import WebApp from '@twa-dev/sdk';
 import './ReferralPage.css';
@@ -13,10 +13,6 @@ const ReferralPage = () => {
     const [error, setError] = useState('');
     const location = useLocation();
 
-    // Переменная для контроля самоприглашения
-    const allowSelfReferral = true; // Измените на false, чтобы запретить самоприглашение
-
-    // Получение chatId из Telegram Web App
     useEffect(() => {
         if (WebApp.initDataUnsafe.user) {
             setChatId(WebApp.initDataUnsafe.user.id);
@@ -25,7 +21,6 @@ const ReferralPage = () => {
         }
     }, []);
 
-    // Генерация реферальной ссылки
     const generateReferralLink = async () => {
         if (!chatId) {
             setError('Chat ID is required to generate a referral link.');
@@ -53,75 +48,6 @@ const ReferralPage = () => {
         }
     };
 
-    // Обработка перехода по реферальной ссылке
-    useEffect(() => {
-        const queryParams = new URLSearchParams(location.search);
-        const refChatId = queryParams.get('start');
-
-        if (refChatId && chatId) {
-            // Проверка на самоприглашение
-            if (!allowSelfReferral && refChatId === chatId) {
-                setError('Self-referral is not allowed.');
-                return;
-            }
-
-            const referralRef = ref(database, `referrals/${refChatId}`);
-            const currentUserRef = ref(database, `referrals/${chatId}`);
-
-            get(referralRef).then((snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    const referrals = data.referrals || [];
-
-                    if (!referrals.includes(chatId)) {
-                        const updatedReferrals = [...referrals, chatId];
-                        const updatedCount = updatedReferrals.length;
-
-                        // Начисляем монеты за нового реферала
-                        const coinsEarned = 5000 * updatedCount;
-
-                        // Обновляем данные в Firebase
-                        runTransaction(referralRef, (referralData) => {
-                            if (referralData) {
-                                referralData.referralCount = updatedCount;
-                                referralData.referrals = updatedReferrals;
-                            }
-                            return referralData;
-                        });
-
-                        // Обновляем монеты пользователя
-                        const userRef = ref(database, `users/${refChatId}`);
-                        get(userRef).then((userSnapshot) => {
-                            if (userSnapshot.exists()) {
-                                const userData = userSnapshot.val();
-                                const newClickCount = (userData.clickCount || 0) + coinsEarned;
-
-                                update(userRef, {
-                                    clickCount: newClickCount,
-                                });
-                            }
-                        });
-
-                        // Добавляем refChatId в список "пригласивших" текущего пользователя
-                        get(currentUserRef).then((currentUserSnapshot) => {
-                            if (currentUserSnapshot.exists()) {
-                                const currentUserData = currentUserSnapshot.val();
-                                const invitedBy = currentUserData.invitedBy || [];
-
-                                if (!invitedBy.includes(refChatId)) {
-                                    update(currentUserRef, {
-                                        invitedBy: [...invitedBy, refChatId],
-                                    });
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-        }
-    }, [location.search, chatId, allowSelfReferral]);
-
-    // Получение текущего количества рефералов и списка рефералов
     useEffect(() => {
         if (chatId) {
             const referralRef = ref(database, `referrals/${chatId}`);
@@ -138,7 +64,6 @@ const ReferralPage = () => {
         }
     }, [chatId]);
 
-    // Копирование ссылки в буфер обмена
     const copyToClipboard = () => {
         if (referralLink) {
             if (navigator.clipboard) {
@@ -155,14 +80,12 @@ const ReferralPage = () => {
         <div className="referral-page">
             <h1>Referral System</h1>
 
-            {/* Кнопка для генерации реферальной ссылки */}
             <div className="generate-link">
                 <button onClick={generateReferralLink} className="generate-button">
                     Generate Referral Link
                 </button>
             </div>
 
-            {/* Отображение реферальной ссылки и кнопка для копирования */}
             {referralLink && (
                 <div className="referral-link">
                     <p>Your Referral Link:</p>
@@ -175,12 +98,10 @@ const ReferralPage = () => {
                 </div>
             )}
 
-            {/* Отображение количества рефералов */}
             <div className="referral-count">
                 <p>Total Referrals: {referralCount}</p>
             </div>
 
-            {/* Отображение списка рефералов */}
             {referralsList.length > 0 && (
                 <div className="referrals-list">
                     <h3>Referrals List:</h3>
@@ -192,16 +113,13 @@ const ReferralPage = () => {
                 </div>
             )}
 
-            {/* Отображение ошибок */}
             {error && <p className="error">{error}</p>}
 
-            {/* Нижняя панель с кнопками навигации */}
             <NavigationBar />
         </div>
     );
 };
 
-// Навигационная панель
 const NavigationBar = () => (
     <div className="navigation-bar">
         <Link to="/referral" className="nav-button">Referral</Link>

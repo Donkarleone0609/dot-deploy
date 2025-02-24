@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { TonConnectUIProvider, useTonConnectUI, useTonWallet, TonConnectButton } from '@tonconnect/ui-react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import ReferralPage from './ReferralPage';
 import ClickCounter from './clicker';
-import RewardsPage from './RewardsPage'; // Импортируем новый компонент
+import RewardsPage from './RewardsPage';
 import WebApp from '@twa-dev/sdk';
-import './App.css'; // Импортируем стили
+import { database } from './firebase';
+import { ref, get, update, runTransaction } from 'firebase/database';
+import './App.css';
 
 function App() {
   return (
@@ -15,7 +17,7 @@ function App() {
           <Route path="/" element={<WalletConnection />} />
           <Route path="/referral" element={<ReferralPage />} />
           <Route path="/click-counter" element={<ClickCounter />} />
-          <Route path="/rewards" element={<RewardsPage />} /> {/* Новый маршрут */}
+          <Route path="/rewards" element={<RewardsPage />} />
         </Routes>
       </Router>
     </TonConnectUIProvider>
@@ -28,25 +30,85 @@ function WalletConnection() {
   const [username, setUsername] = useState('');
   const [firstName, setFirstName] = useState('');
   const [isMobile, setIsMobile] = useState(true);
+  const location = useLocation();
+  const [chatId, setChatId] = useState('');
 
-  const onlyMobile = true;
+  const onlyMobile = false;
 
-  // Проверяем, является ли устройство мобильным
   useEffect(() => {
     const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
     setIsMobile(isMobileDevice);
   }, []);
 
-  // Получаем данные пользователя из Telegram Mini App
   useEffect(() => {
     if (WebApp.initDataUnsafe.user) {
       const user = WebApp.initDataUnsafe.user;
       setUsername(user.username || '');
       setFirstName(user.first_name || '');
+      setChatId(user.id);
     }
   }, []);
 
-  // Если onlyMobile равно true и пользователь заходит с ПК, показываем сообщение
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const refChatId = queryParams.get('start');
+
+    if (refChatId && chatId && refChatId !== chatId) {
+      handleReferral(refChatId, chatId);
+    }
+  }, [location.search, chatId]);
+
+  const handleReferral = async (refChatId, chatId) => {
+    const referralRef = ref(database, `referrals/${refChatId}`);
+    const currentUserRef = ref(database, `referrals/${chatId}`);
+
+    try {
+      const snapshot = await get(referralRef);
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const referrals = data.referrals || [];
+
+        if (!referrals.includes(chatId)) {
+          const updatedReferrals = [...referrals, chatId];
+          const updatedCount = updatedReferrals.length;
+
+          await runTransaction(referralRef, (referralData) => {
+            if (referralData) {
+              referralData.referralCount = updatedCount;
+              referralData.referrals = updatedReferrals;
+            }
+            return referralData;
+          });
+
+          const userRef = ref(database, `users/${refChatId}`);
+          const userSnapshot = await get(userRef);
+          if (userSnapshot.exists()) {
+            const userData = userSnapshot.val();
+            const newClickCount = (userData.clickCount || 0) + 5000 * updatedCount;
+
+            await update(userRef, {
+              clickCount: newClickCount,
+            });
+          }
+
+          const currentUserSnapshot = await get(currentUserRef);
+          if (currentUserSnapshot.exists()) {
+            const currentUserData = currentUserSnapshot.val();
+            const invitedBy = currentUserData.invitedBy || [];
+
+            if (!invitedBy.includes(refChatId)) {
+              await update(currentUserRef, {
+                invitedBy: [...invitedBy, refChatId],
+              });
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error handling referral:', err);
+    }
+  };
+
   if (onlyMobile && !isMobile) {
     return (
       <div className="mobile-only-message">
@@ -71,11 +133,6 @@ function WalletConnection() {
         <div className="ton-connect-button-container">
           <TonConnectButton />
         </div>
-
-        {/* Кнопка для перехода на страницу с наградами */}
-        {/* <Link to="/rewards" className="rewards-button">
-          Получить награды
-        </Link> */}
       </div>
 
       <NavigationBar />
@@ -83,13 +140,12 @@ function WalletConnection() {
   );
 }
 
-// Компонент для навигации
 const NavigationBar = () => (
   <div className="navigation-bar">
     <Link to="/referral" className="nav-button">Referral</Link>
     <Link to="/" className="nav-button">Home</Link>
     <Link to="/click-counter" className="nav-button">Clicker</Link>
-    <Link to="/rewards" className="nav-button">Rewards</Link> {/* Новая ссылка */}
+    <Link to="/rewards" className="nav-button">Rewards</Link>
   </div>
 );
 
