@@ -38,7 +38,7 @@ const ReferralPage = () => {
                 });
             }
 
-            const link = `https://t.me/whoisd0t_bot?start=${chatId}`;
+            const link = `https://t.me/whoisd0t_bot/start?startapp=${chatId}`;
             setReferralLink(link);
             setError('');
         } catch (err) {
