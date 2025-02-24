@@ -61,7 +61,7 @@ const Clicker = () => {
                 if (coinsEarned > 0) {
                     const newClickCount = (data.clickCount || 0) + coinsEarned;
                     setClickCount(newClickCount);
-                    setProfitPopup(`Вы получили ${coinsEarned} монет за время отсутствия!`);
+                    setProfitPopup(coinsEarned);
                     setTimeout(() => setProfitPopup(null), 5000);
 
                     await saveUserData(userId, {
@@ -73,45 +73,6 @@ const Clicker = () => {
                         memecoin: data.memecoin,
                         traderAI: data.traderAI
                     });
-                }
-            }
-
-            // Проверяем, достигли ли рефералы порога в 100к монет
-            if (data.referrals) {
-                const referrals = data.referrals;
-                const bonusReceived = data.bonusReceived || {}; // Поле для отслеживания выданных бонусов
-
-                for (const referralId of referrals) {
-                    const referralRef = ref(database, `users/${referralId}`);
-                    const referralSnapshot = await get(referralRef);
-
-                    if (referralSnapshot.exists()) {
-                        const referralData = referralSnapshot.val();
-                        const referralCoins = referralData.clickCount || 0;
-
-                        // Если реферал достиг 100к монет и бонус еще не был выдан
-                        if (referralCoins >= 100000 && !bonusReceived[referralId]) {
-                            const newClickCount = (data.clickCount || 0) + 20000; // Начисляем бонус
-                            setClickCount(newClickCount);
-
-                            // Обновляем данные пользователя
-                            bonusReceived[referralId] = true; // Отмечаем, что бонус выдан
-                            await saveUserData(userId, {
-                                clickCount: newClickCount,
-                                hasAutoFarm: data.hasAutoFarm,
-                                dotCPU: data.dotCPU,
-                                dotGPU: data.dotGPU,
-                                simpleBotTrader: data.simpleBotTrader,
-                                memecoin: data.memecoin,
-                                traderAI: data.traderAI,
-                                bonusReceived // Сохраняем обновленный список бонусов
-                            });
-
-                            // Показываем поп-ап с бонусом
-                            setProfitPopup(`Вы получили 20000 монет за достижение рефералом 100к монет!`);
-                            setTimeout(() => setProfitPopup(null), 5000);
-                        }
-                    }
                 }
             }
         }
@@ -324,7 +285,7 @@ const Clicker = () => {
             {/* Поп-ап с прибылью */}
             {profitPopup !== null && (
                 <div className="profit-popup clicker-popup">
-                    {profitPopup}
+                    Вы получили {profitPopup} монет за время отсутствия!
                 </div>
             )}
 
