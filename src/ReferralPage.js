@@ -13,6 +13,9 @@ const ReferralPage = () => {
     const [error, setError] = useState('');
     const location = useLocation();
 
+    // Переменная для контроля самоприглашения
+    const allowSelfReferral = true; // Измените на false, чтобы запретить самоприглашение
+
     // Получение chatId из Telegram Web App
     useEffect(() => {
         if (WebApp.initDataUnsafe.user) {
@@ -41,7 +44,6 @@ const ReferralPage = () => {
                 });
             }
 
-            // Генерация deep link
             const link = `https://t.me/whoisd0t_bot?start=${chatId}`;
             setReferralLink(link);
             setError('');
@@ -51,12 +53,18 @@ const ReferralPage = () => {
         }
     };
 
-    // Обработка deep link
+    // Обработка перехода по реферальной ссылке
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const refChatId = queryParams.get('start');
 
-        if (refChatId && chatId && refChatId !== chatId) {
+        if (refChatId && chatId) {
+            // Проверка на самоприглашение
+            if (!allowSelfReferral && refChatId === chatId) {
+                setError('Self-referral is not allowed.');
+                return;
+            }
+
             const referralRef = ref(database, `referrals/${refChatId}`);
             const currentUserRef = ref(database, `referrals/${chatId}`);
 
@@ -111,7 +119,7 @@ const ReferralPage = () => {
                 }
             });
         }
-    }, [location.search, chatId]);
+    }, [location.search, chatId, allowSelfReferral]);
 
     // Получение текущего количества рефералов и списка рефералов
     useEffect(() => {
@@ -147,12 +155,14 @@ const ReferralPage = () => {
         <div className="referral-page">
             <h1>Referral System</h1>
 
+            {/* Кнопка для генерации реферальной ссылки */}
             <div className="generate-link">
                 <button onClick={generateReferralLink} className="generate-button">
                     Generate Referral Link
                 </button>
             </div>
 
+            {/* Отображение реферальной ссылки и кнопка для копирования */}
             {referralLink && (
                 <div className="referral-link">
                     <p>Your Referral Link:</p>
@@ -165,10 +175,12 @@ const ReferralPage = () => {
                 </div>
             )}
 
+            {/* Отображение количества рефералов */}
             <div className="referral-count">
                 <p>Total Referrals: {referralCount}</p>
             </div>
 
+            {/* Отображение списка рефералов */}
             {referralsList.length > 0 && (
                 <div className="referrals-list">
                     <h3>Referrals List:</h3>
@@ -180,8 +192,10 @@ const ReferralPage = () => {
                 </div>
             )}
 
+            {/* Отображение ошибок */}
             {error && <p className="error">{error}</p>}
 
+            {/* Нижняя панель с кнопками навигации */}
             <NavigationBar />
         </div>
     );

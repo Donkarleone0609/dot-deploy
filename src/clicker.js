@@ -14,11 +14,11 @@ const Clicker = () => {
     const [isAppVisible, setIsAppVisible] = useState(true);
 
     // Состояния для улучшений
-    const [dotCPU, setDotCPU] = useState({ count: 0, price: 1000 });
-    const [dotGPU, setDotGPU] = useState({ count: 0, price: 1000 });
-    const [simpleBotTrader, setSimpleBotTrader] = useState({ count: 0, price: 1500 });
-    const [memecoin, setMemecoin] = useState({ count: 0, price: 2500 });
-    const [traderAI, setTraderAI] = useState({ count: 0, price: 3500 });
+    const [dotCPU, setDotCPU] = useState({ count: 0, price: 1500 }); // Увеличена цена
+    const [dotGPU, setDotGPU] = useState({ count: 0, price: 1500 }); // Увеличена цена
+    const [simpleBotTrader, setSimpleBotTrader] = useState({ count: 0, price: 2000 }); // Увеличена цена
+    const [memecoin, setMemecoin] = useState({ count: 0, price: 3000 }); // Увеличена цена
+    const [traderAI, setTraderAI] = useState({ count: 0, price: 5000 }); // Увеличена цена
 
     // Получаем ID пользователя из Telegram Mini App
     useEffect(() => {
@@ -47,11 +47,11 @@ const Clicker = () => {
             setLastSeen(data.lastSeen || Date.now());
 
             // Загружаем улучшения
-            setDotCPU(data.dotCPU || { count: 0, price: 1000 });
-            setDotGPU(data.dotGPU || { count: 0, price: 1000 });
-            setSimpleBotTrader(data.simpleBotTrader || { count: 0, price: 1500 });
-            setMemecoin(data.memecoin || { count: 0, price: 2500 });
-            setTraderAI(data.traderAI || { count: 0, price: 3500 });
+            setDotCPU(data.dotCPU || { count: 0, price: 1500 });
+            setDotGPU(data.dotGPU || { count: 0, price: 1500 });
+            setSimpleBotTrader(data.simpleBotTrader || { count: 0, price: 2000 });
+            setMemecoin(data.memecoin || { count: 0, price: 3000 });
+            setTraderAI(data.traderAI || { count: 0, price: 5000 });
 
             // Рассчитываем прибыль за время отсутствия
             if (data.hasAutoFarm && data.lastSeen) {
@@ -103,7 +103,7 @@ const Clicker = () => {
     // Обработчик клика
     const handleClick = useCallback(async () => {
         setIsClicked(true);
-        const newClickCount = clickCount + 1 + (dotCPU.count * 2) + (dotGPU.count * 2);
+        const newClickCount = clickCount + 1 + (dotCPU.count * 2) + (dotGPU.count * 2); // Фиксированный бонус
         setClickCount(newClickCount);
 
         if (userId) {
@@ -123,11 +123,10 @@ const Clicker = () => {
 
     // Покупка улучшения
     const buyUpgrade = useCallback(async (upgrade, setUpgrade, basePrice, baseEffect) => {
-        if (clickCount >= upgrade.price && upgrade.count < 20) { // Лимит увеличен до 20
+        if (clickCount >= upgrade.price && upgrade.count < 20) { // Лимит 20 улучшений
             const newClickCount = clickCount - upgrade.price;
             const newCount = upgrade.count + 1;
-            const newPrice = upgrade.price * 2;
-            const newEffect = baseEffect * Math.pow(2, newCount);
+            const newPrice = upgrade.price * 1.5; // Увеличиваем цену на 50% за каждый уровень
 
             setClickCount(newClickCount);
             setUpgrade({ count: newCount, price: newPrice });
@@ -151,9 +150,9 @@ const Clicker = () => {
         let profit = 0;
 
         if (data.hasAutoFarm) profit += Math.floor(timeDiff / 5000);
-        if (data.simpleBotTrader?.count) profit += data.simpleBotTrader.count * 3 * Math.floor(timeDiff / 5000);
-        if (data.traderAI?.count) profit += data.traderAI.count * 14 * Math.floor(timeDiff / 5000);
-        if (data.memecoin?.count) profit *= 1 + (0.02 * data.memecoin.count);
+        if (data.simpleBotTrader?.count) profit += data.simpleBotTrader.count * 3 * Math.floor(timeDiff / 5000); // Фиксированный бонус
+        if (data.traderAI?.count) profit += data.traderAI.count * 14 * Math.floor(timeDiff / 5000); // Фиксированный бонус
+        if (data.memecoin?.count) profit *= 1 + (0.02 * data.memecoin.count); // Процентный бонус
 
         return Math.floor(profit);
     }, []);
@@ -162,7 +161,7 @@ const Clicker = () => {
     useEffect(() => {
         if (hasAutoFarm && isAppVisible) {
             const interval = setInterval(async () => {
-                const newClickCount = clickCount + 1 + (simpleBotTrader.count * 3) + (traderAI.count * 14);
+                const newClickCount = clickCount + 1 + (simpleBotTrader.count * 3) + (traderAI.count * 14); // Фиксированный бонус
                 setClickCount(newClickCount);
 
                 if (userId) {
@@ -220,12 +219,12 @@ const Clicker = () => {
             {/* Кнопка покупки автофармилки */}
             {!hasAutoFarm && (
                 <button
-                    onClick={() => buyUpgrade({ count: 0, price: 500 }, setHasAutoFarm, 500, 1)}
+                    onClick={() => buyUpgrade({ count: 0, price: 1000 }, setHasAutoFarm, 1000, 1)} // Увеличена цена
                     className="upgrade-button"
-                    disabled={clickCount < 500}
+                    disabled={clickCount < 1000}
                 >
                     <span>Default Miner</span>
-                    <span>500 монет</span>
+                    <span>1000 монет</span>
                 </button>
             )}
 
@@ -234,7 +233,7 @@ const Clicker = () => {
                 <UpgradeButton
                     upgrade={dotCPU}
                     setUpgrade={setDotCPU}
-                    basePrice={1000}
+                    basePrice={1500}
                     baseEffect={2}
                     label="DOT CPU"
                     description="+2 к клику"
@@ -244,7 +243,7 @@ const Clicker = () => {
                 <UpgradeButton
                     upgrade={dotGPU}
                     setUpgrade={setDotGPU}
-                    basePrice={1000}
+                    basePrice={1500}
                     baseEffect={2}
                     label="DOT GPU"
                     description="+2 к клику"
@@ -254,7 +253,7 @@ const Clicker = () => {
                 <UpgradeButton
                     upgrade={simpleBotTrader}
                     setUpgrade={setSimpleBotTrader}
-                    basePrice={1500}
+                    basePrice={2000}
                     baseEffect={3}
                     label="Bot Trader"
                     description="+3 монеты/5 сек"
@@ -264,7 +263,7 @@ const Clicker = () => {
                 <UpgradeButton
                     upgrade={memecoin}
                     setUpgrade={setMemecoin}
-                    basePrice={2500}
+                    basePrice={3000}
                     baseEffect={0.02}
                     label="Memecoin"
                     description="+2% к профиту"
@@ -274,7 +273,7 @@ const Clicker = () => {
                 <UpgradeButton
                     upgrade={traderAI}
                     setUpgrade={setTraderAI}
-                    basePrice={3500}
+                    basePrice={5000}
                     baseEffect={14}
                     label="Trader AI"
                     description="+14 монет/5 сек"
