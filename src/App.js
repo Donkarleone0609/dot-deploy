@@ -53,12 +53,12 @@ function WalletConnection() {
     const queryParams = new URLSearchParams(location.search);
     const refChatId = queryParams.get('start');
 
-    if (refChatId) {
-      handleReferral(refChatId);
+    if (refChatId && chatId && refChatId !== chatId) {
+      handleReferral(refChatId, chatId);
     }
-  }, [location.search]);
+  }, [location.search, chatId]);
 
-  const handleReferral = async (refChatId) => {
+  const handleReferral = async (refChatId, chatId) => {
     const referralRef = ref(database, `referrals/${refChatId}`);
 
     try {
