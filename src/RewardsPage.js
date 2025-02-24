@@ -6,7 +6,7 @@ import NavigationBar from './NavigationBar';
 import confetti from 'canvas-confetti';
 import './Clicker.css';
 
-// Проверка подписки на Telegram канал
+// Check Telegram subscription
 const checkTelegramSubscription = async (userId) => {
   const botToken = '7118279667:AAF0EHBOL4lK85mD7KCR8ZeJFX6-xVL2Flc';
   const channelId = '@whoisdotcoin';
@@ -17,7 +17,7 @@ const checkTelegramSubscription = async (userId) => {
     const data = await response.json();
     return ['member', 'administrator', 'creator'].includes(data.result?.status);
   } catch (error) {
-    console.error('Ошибка при проверке подписки:', error);
+    console.error('Error checking Telegram subscription:', error);
     return false;
   }
 };
@@ -34,10 +34,10 @@ function RewardsPage() {
 
   const userId = WebApp.initDataUnsafe.user?.id;
 
-  // Загрузка данных пользователя
+  // Load user data
   useEffect(() => {
     if (!userId) {
-      console.error('ID пользователя Telegram не найден.');
+      console.error('Telegram user ID not found.');
       setLoading(false);
       return;
     }
@@ -53,7 +53,7 @@ function RewardsPage() {
           setWalletRewardClaimed(data.walletRewardClaimed || false);
         }
       } catch (error) {
-        console.error('Ошибка при загрузке данных:', error);
+        console.error('Error loading user data:', error);
       } finally {
         setLoading(false);
       }
@@ -62,16 +62,16 @@ function RewardsPage() {
     fetchData();
   }, [userId]);
 
-  // Отображение поп-апа
+  // Show popup message
   const showPopup = (message, isSuccess = false) => {
     setPopupMessage(message);
     if (isSuccess) confetti();
   };
 
-  // Получение награды за подписку на Telegram канал
+  // Claim Telegram reward
   const claimTelegramReward = async () => {
     if (!userId) {
-      showPopup('ID пользователя Telegram не найден.');
+      showPopup('Telegram user ID not found.');
       return;
     }
 
@@ -79,7 +79,7 @@ function RewardsPage() {
     try {
       const isSubscribed = await checkTelegramSubscription(userId);
       if (!isSubscribed) {
-        showPopup('Вы еще не подписались на Telegram канал.');
+        showPopup('You are not subscribed to the Telegram channel.');
         return;
       }
 
@@ -87,7 +87,7 @@ function RewardsPage() {
       const snapshot = await get(rewardRef);
 
       if (snapshot.exists() && snapshot.val()) {
-        showPopup('Вы уже получили награду за подписку на Telegram канал.');
+        showPopup('You have already claimed the Telegram reward.');
         return;
       }
 
@@ -99,24 +99,24 @@ function RewardsPage() {
       await set(rewardRef, true);
       setCoins(newCoins);
       setTelegramRewardClaimed(true);
-      showPopup('Вы получили 2000 монет за подписку на Telegram канал!', true);
+      showPopup('You have received 2000 coins for subscribing to the Telegram channel!', true);
     } catch (error) {
-      console.error('Ошибка при обновлении данных:', error);
-      showPopup('Произошла ошибка при начислении награды.');
+      console.error('Error updating data:', error);
+      showPopup('An error occurred while claiming the reward.');
     } finally {
       setIsLoadingTelegram(false);
     }
   };
 
-  // Получение награды за привязку кошелька
+  // Claim wallet reward
   const claimWalletReward = async () => {
     if (!wallet) {
-      showPopup('Вы еще не привязали TON кошелек.');
+      showPopup('You have not connected a TON wallet.');
       return;
     }
 
     if (!userId) {
-      showPopup('ID пользователя Telegram не найден.');
+      showPopup('Telegram user ID not found.');
       return;
     }
 
@@ -126,7 +126,7 @@ function RewardsPage() {
       const snapshot = await get(rewardRef);
 
       if (snapshot.exists() && snapshot.val()) {
-        showPopup('Вы уже получили награду за привязку кошелька.');
+        showPopup('You have already claimed the wallet reward.');
         return;
       }
 
@@ -138,63 +138,75 @@ function RewardsPage() {
       await set(rewardRef, true);
       setCoins(newCoins);
       setWalletRewardClaimed(true);
-      showPopup('Вы получили 5000 монет за привязку TON кошелька!', true);
+      showPopup('You have received 5000 coins for connecting your TON wallet!', true);
     } catch (error) {
-      console.error('Ошибка при обновлении данных:', error);
-      showPopup('Произошла ошибка при начислении награды.');
+      console.error('Error updating data:', error);
+      showPopup('An error occurred while claiming the reward.');
     } finally {
       setIsLoadingWallet(false);
     }
   };
 
-  if (loading) return <div>Загрузка данных...</div>;
-  if (!userId) return <div>Ошибка: ID пользователя Telegram не найден.</div>;
-
   return (
     <div className="rewards-page">
-      <h1>Получение наград</h1>
-      <div className="rewards-list">
-        {!telegramRewardClaimed && (
-          <div className="reward-item">
-            <h3>Подписка на Telegram канал</h3>
-            <p>Награда: 2000 монет</p>
-            <button
-              onClick={claimTelegramReward}
-              disabled={isLoadingTelegram}
-            >
-              {isLoadingTelegram ? 'Загрузка...' : 'Получить награду'}
-            </button>
-          </div>
-        )}
-
-        {!walletRewardClaimed && (
-          <div className="reward-item">
-            <h3>Привязка TON кошелька</h3>
-            <p>Награда: 5000 монет</p>
-            <button
-              onClick={claimWalletReward}
-              disabled={isLoadingWallet}
-            >
-              {isLoadingWallet ? 'Загрузка...' : 'Получить награду'}
-            </button>
-          </div>
-        )}
-      </div>
-      <div className="total-coins">
-        <h3>Ваши монеты: {coins}</h3>
-      </div>
-
-      {popupMessage && (
+      <NavigationBar />
+      {loading ? (
+        <div className="loading-container">
+          <div className="loading-label">Загрузка данных...</div>
+        </div>
+      ) : (
         <>
-          <div className="overlay" onClick={() => setPopupMessage(null)} />
-          <div className="profit-popup rewards-popup">
-            <p>{popupMessage}</p>
-            <button onClick={() => setPopupMessage(null)}>Закрыть</button>
+          <h1>Получение наград</h1>
+          <div className="rewards-list">
+            {!telegramRewardClaimed && (
+              <div className="reward-item">
+                <h3>Подписка на Telegram канал</h3>
+                <p>Награда: 2000 монет</p>
+                <a
+                  href="https://t.me/whoisdotcoin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="telegram-link"
+                >
+                  Перейти в Telegram канал
+                </a>
+                <button
+                  onClick={claimTelegramReward}
+                  disabled={isLoadingTelegram}
+                >
+                  {isLoadingTelegram ? 'Загрузка...' : 'Получить награду'}
+                </button>
+              </div>
+            )}
+
+            {!walletRewardClaimed && (
+              <div className="reward-item">
+                <h3>Привязка TON кошелька</h3>
+                <p>Награда: 5000 монет</p>
+                <button
+                  onClick={claimWalletReward}
+                  disabled={isLoadingWallet}
+                >
+                  {isLoadingWallet ? 'Загрузка...' : 'Получить награду'}
+                </button>
+              </div>
+            )}
           </div>
+          <div className="total-coins">
+            <h3>Ваши монеты: {coins}</h3>
+          </div>
+
+          {popupMessage && (
+            <>
+              <div className="overlay" onClick={() => setPopupMessage(null)} />
+              <div className="profit-popup rewards-popup">
+                <p>{popupMessage}</p>
+                <button onClick={() => setPopupMessage(null)}>Закрыть</button>
+              </div>
+            </>
+          )}
         </>
       )}
-
-      <NavigationBar />
     </div>
   );
 }

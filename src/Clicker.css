@@ -158,3 +158,14 @@
     background-color: #5e6778; /* Цвет кнопок при наведении */
     color: white;
 }
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .loading-label {
+    font-size: 1.5rem;
+    color: #000;
+  }
