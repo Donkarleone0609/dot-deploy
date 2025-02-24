@@ -33,7 +33,7 @@ function WalletConnection() {
   const location = useLocation();
   const [chatId, setChatId] = useState('');
 
-  const onlyMobile = true;
+  const onlyMobile = false;
 
   useEffect(() => {
     const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
